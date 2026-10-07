@@ -64,6 +64,11 @@ public struct LineWin: Equatable, Identifiable {
 public struct SlotPosition: Hashable {
     public let reel: Int
     public let row: Int
+
+    public init(reel: Int, row: Int) {
+        self.reel = reel
+        self.row = row
+    }
 }
 
 public struct SpinResult: Equatable {
