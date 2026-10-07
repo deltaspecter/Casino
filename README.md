@@ -119,6 +119,15 @@ Grundsatz: **RNG → Mischen bzw. Walzenstopp → Ausgabe → Spielregeln → Er
 * **Protokoll:** Kodierung aller Nachrichten, Raumcodes, Schutz vor Doppelaktionen, Reconnect-Grenzen
 * **Server:** Registrierung/Token-Login, Freunde & Präsenz, Räume (Code, Limits, Host-Rechte, Einladung), Matchmaking (Paarung, Bot-Angebot, Warten, Abbrechen), synchrone Poker-Hände ohne Kartenlecks, abgelehnte doppelte/veraltete/fremde Aktionen, Turn-Timeout, Blackjack-Abrechnung über das Server-Wallet, verdeckte Dealer-Karte, Reconnect innerhalb der Frist, Abbau nach Fristablauf ohne Chipverlust, Neustart mit Rückbuchung, Rate-Limit, echte WebSocket-Verbindung
 
+## Auf dem iPad öffnen – ohne Mac (Swift Playgrounds)
+
+1. Auf dem iPad **Swift Playgrounds** aus dem App Store laden (kostenlos, iPadOS 17 oder neuer).
+2. In Safari das Repository als ZIP laden: GitHub → Branch `claude/blackcasino-ipad-app` → **Code → Download ZIP**.
+3. In der **Dateien**-App die ZIP antippen (wird entpackt) und darin **`BlackCasino.swiftpm`** antippen → öffnet sich in Swift Playgrounds.
+4. Oben auf **▶︎** tippen – die App startet. Über das Vollbild-Symbol läuft sie bildschirmfüllend.
+
+`BlackCasino.swiftpm` wird mit `python3 scripts/make_playgrounds.py` aus denselben Quellen erzeugt wie das Xcode-Projekt (gleiche Regeln, gleicher Code); die CI prüft, dass es aktuell ist und baut.
+
 ## Bauen & Starten
 
 Voraussetzungen: macOS mit Xcode 15.4+ (empfohlen Xcode 16), [XcodeGen](https://github.com/yonaskolb/XcodeGen).
