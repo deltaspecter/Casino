@@ -29,6 +29,26 @@ jobs:
         working-directory: Server
         run: swift test
 
+  playgrounds-package:
+    name: Swift-Playgrounds-Paket (iPad, ohne Mac)
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Select Xcode
+        run: sudo xcode-select -s /Applications/Xcode_16.4.app || true
+      - name: Paket ist aktuell
+        run: |
+          python3 scripts/make_playgrounds.py
+          git diff --exit-code -- BlackCasino.swiftpm || (echo "BlackCasino.swiftpm ist veraltet – scripts/make_playgrounds.py ausführen" && exit 1)
+      - name: Build für iPad-Simulator
+        working-directory: BlackCasino.swiftpm
+        run: |
+          xcodebuild build -scheme BlackCasino -destination 'generic/platform=iOS Simulator' \
+            CODE_SIGNING_ALLOWED=NO > build.log 2>&1 && STATUS=0 || STATUS=$?
+          grep -E "error:" build.log | sort -u | head -100 || true
+          tail -n 15 build.log
+          exit $STATUS
+
   ipad-app:
     name: iPad app build (Xcode)
     runs-on: macos-15
