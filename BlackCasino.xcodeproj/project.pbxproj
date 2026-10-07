@@ -1,0 +1,541 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 54;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		01334CD4E653C5E0C903365C /* BlackjackTable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0F1CC226E709B9478EC3FD0C /* BlackjackTable.swift */; };
+		04BA7DC8F582765118722056 /* BlackCasinoApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2636D03F80F79B3A3169F85D /* BlackCasinoApp.swift */; };
+		24DE519A9482696DD9BFEAD4 /* Components.swift in Sources */ = {isa = PBXBuildFile; fileRef = 96D347E774A71B89632C37FE /* Components.swift */; };
+		25208C3657EE9DADA539EE74 /* BlackjackView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 55F7B310136D6178FF4666E7 /* BlackjackView.swift */; };
+		29ED77EF64AE636177ABE478 /* AppModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3D592F79F2989F8CCF768BA5 /* AppModel.swift */; };
+		336EAE541ACB5B9F952B1F28 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 94EC583F6BE7E8CC4CEDA462 /* Assets.xcassets */; };
+		355FFC0FE4995B4FE3578CD8 /* MainMenuView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7E92C06102B90589821A0A9 /* MainMenuView.swift */; };
+		3B7C26DE7263C6CF68473048 /* CasinoCore in Frameworks */ = {isa = PBXBuildFile; productRef = C67281C8223346B5A13BDBD6 /* CasinoCore */; };
+		3D6D51082F6707480CD1CCE5 /* PokerTable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 776DF4AE00AEFCA77075F119 /* PokerTable.swift */; };
+		3E41BC66746500A8364A3CE4 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 539A3CFD5B7FD648EA9133C8 /* Theme.swift */; };
+		465F1DA79F5EF1FE4F702CE2 /* SlotMachineView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8ADBB2C3F60149A12F85F14 /* SlotMachineView.swift */; };
+		48164A9613776B3B12BDF3EA /* StartView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CF20623B5C7AA0B25CA3879A /* StartView.swift */; };
+		621F938C3478FEC4C15A1C9F /* Effects.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BD4D5B160C9645C4B737138 /* Effects.swift */; };
+		64D324E411CAEB778FA7FAC1 /* SceneContainer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C6AFAC82B1CD1F8B8CE5174 /* SceneContainer.swift */; };
+		6BC2140DA7005E8E830160D9 /* LoadingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3BC3774F823FF4C6CD9FEF26 /* LoadingView.swift */; };
+		6D679B7DC86327E332213128 /* CasinoStage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3CDBB235D864FDA9C86D3C52 /* CasinoStage.swift */; };
+		7AECCE242CE43B0E7C171EA6 /* TextureFactory.swift in Sources */ = {isa = PBXBuildFile; fileRef = C89F331569579B3EBC254544 /* TextureFactory.swift */; };
+		7B5AB9F63838A732CC99241F /* SlotTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = F512DFFDDF4E17D25BD23218 /* SlotTheme.swift */; };
+		88657FE077226B7E2642DCB4 /* CardNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = B414E65661F57AB4986EE525 /* CardNode.swift */; };
+		8B4572FF101F62562E7873D3 /* PokerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A030D567612CCD5E86435FB /* PokerView.swift */; };
+		8D1FC7DE7831CB2F37E13527 /* Haptics.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD566D9E2C6C294CBA2B8B75 /* Haptics.swift */; };
+		8DFA16EE6305637328AE5747 /* GameChrome.swift in Sources */ = {isa = PBXBuildFile; fileRef = 12586C00F22BAC7C91BFEC29 /* GameChrome.swift */; };
+		96DE84F6B9534EB913A82101 /* SlotsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39DB4ABCD57F4FEB1DCAD27C /* SlotsViewModel.swift */; };
+		A7A2F8ECFABA66E1DB4346FF /* ChipStackNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9625D2C9DA2C497FA73F073D /* ChipStackNode.swift */; };
+		A9B1F4AFDCD35DAD6F0312EB /* SlotsLobbyView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0F7780C1828029CC90C9D48 /* SlotsLobbyView.swift */; };
+		AD075CDCB906A265E162AD77 /* BlackjackViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B130EFD0AF4DDC3714F5BA9 /* BlackjackViewModel.swift */; };
+		BBE44873130DF9ECA3B90007 /* PokerViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = B796A493E876EC8293407DAF /* PokerViewModel.swift */; };
+		C931E35E5E3B878967A7E88D /* ProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD57440A54A87FFA71CC6A05 /* ProfileView.swift */; };
+		D2DE9FB9745E45098A3AEEA5 /* RewardsViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = CFA5A56462270AC7C52E269F /* RewardsViews.swift */; };
+		D8F8583DB3EA6C23FA3425CB /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0373B7A0D213EB0CD9ACF32E /* RootView.swift */; };
+		F3531DA63D11180201CF83CC /* SceneKitSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20451718197EAB1A4A89105B /* SceneKitSupport.swift */; };
+		FD3DDFAF8C9FA737552E0D9E /* DealerAvatar.swift in Sources */ = {isa = PBXBuildFile; fileRef = C4FAB4BBF48723CADE58EDBA /* DealerAvatar.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		0373B7A0D213EB0CD9ACF32E /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
+		0B130EFD0AF4DDC3714F5BA9 /* BlackjackViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlackjackViewModel.swift; sourceTree = "<group>"; };
+		0F1CC226E709B9478EC3FD0C /* BlackjackTable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlackjackTable.swift; sourceTree = "<group>"; };
+		12586C00F22BAC7C91BFEC29 /* GameChrome.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameChrome.swift; sourceTree = "<group>"; };
+		1C6AFAC82B1CD1F8B8CE5174 /* SceneContainer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneContainer.swift; sourceTree = "<group>"; };
+		20451718197EAB1A4A89105B /* SceneKitSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneKitSupport.swift; sourceTree = "<group>"; };
+		2636D03F80F79B3A3169F85D /* BlackCasinoApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlackCasinoApp.swift; sourceTree = "<group>"; };
+		2BD4D5B160C9645C4B737138 /* Effects.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Effects.swift; sourceTree = "<group>"; };
+		39DB4ABCD57F4FEB1DCAD27C /* SlotsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SlotsViewModel.swift; sourceTree = "<group>"; };
+		3BC3774F823FF4C6CD9FEF26 /* LoadingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoadingView.swift; sourceTree = "<group>"; };
+		3CDBB235D864FDA9C86D3C52 /* CasinoStage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CasinoStage.swift; sourceTree = "<group>"; };
+		3D592F79F2989F8CCF768BA5 /* AppModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppModel.swift; sourceTree = "<group>"; };
+		539A3CFD5B7FD648EA9133C8 /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
+		55F7B310136D6178FF4666E7 /* BlackjackView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlackjackView.swift; sourceTree = "<group>"; };
+		776DF4AE00AEFCA77075F119 /* PokerTable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PokerTable.swift; sourceTree = "<group>"; };
+		94EC583F6BE7E8CC4CEDA462 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		9625D2C9DA2C497FA73F073D /* ChipStackNode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChipStackNode.swift; sourceTree = "<group>"; };
+		96D347E774A71B89632C37FE /* Components.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Components.swift; sourceTree = "<group>"; };
+		9A030D567612CCD5E86435FB /* PokerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PokerView.swift; sourceTree = "<group>"; };
+		B414E65661F57AB4986EE525 /* CardNode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardNode.swift; sourceTree = "<group>"; };
+		B6B72A51EC3060C98A438943 /* CasinoCore */ = {isa = PBXFileReference; lastKnownFileType = folder; name = CasinoCore; path = Packages/CasinoCore; sourceTree = SOURCE_ROOT; };
+		B796A493E876EC8293407DAF /* PokerViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PokerViewModel.swift; sourceTree = "<group>"; };
+		BB26A4661C892750738E952F /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		BD566D9E2C6C294CBA2B8B75 /* Haptics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Haptics.swift; sourceTree = "<group>"; };
+		C4FAB4BBF48723CADE58EDBA /* DealerAvatar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DealerAvatar.swift; sourceTree = "<group>"; };
+		C89F331569579B3EBC254544 /* TextureFactory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextureFactory.swift; sourceTree = "<group>"; };
+		CD57440A54A87FFA71CC6A05 /* ProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileView.swift; sourceTree = "<group>"; };
+		CF20623B5C7AA0B25CA3879A /* StartView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StartView.swift; sourceTree = "<group>"; };
+		CFA5A56462270AC7C52E269F /* RewardsViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RewardsViews.swift; sourceTree = "<group>"; };
+		D6EBA5E74AF4280EF393281E /* BlackCasino.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = BlackCasino.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		D8ADBB2C3F60149A12F85F14 /* SlotMachineView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SlotMachineView.swift; sourceTree = "<group>"; };
+		E7E92C06102B90589821A0A9 /* MainMenuView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainMenuView.swift; sourceTree = "<group>"; };
+		F0F7780C1828029CC90C9D48 /* SlotsLobbyView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SlotsLobbyView.swift; sourceTree = "<group>"; };
+		F512DFFDDF4E17D25BD23218 /* SlotTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SlotTheme.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		8D4B108F9B0AC5D3BBD9EB10 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				3B7C26DE7263C6CF68473048 /* CasinoCore in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		01E20C908477261CCE916CAA /* Games */ = {
+			isa = PBXGroup;
+			children = (
+				4AB7380395F4673FE90735BB /* Blackjack */,
+				6E36EF81415750125A0D6E2E /* Poker */,
+				F0CFA0E0F36F54293890DF94 /* Slots */,
+			);
+			path = Games;
+			sourceTree = "<group>";
+		};
+		07A150FCF9291911A54DEBD0 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				94EC583F6BE7E8CC4CEDA462 /* Assets.xcassets */,
+				BB26A4661C892750738E952F /* Info.plist */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+		1FBFC1464A5C21115CDBB008 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				D6EBA5E74AF4280EF393281E /* BlackCasino.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		4AB7380395F4673FE90735BB /* Blackjack */ = {
+			isa = PBXGroup;
+			children = (
+				0F1CC226E709B9478EC3FD0C /* BlackjackTable.swift */,
+				55F7B310136D6178FF4666E7 /* BlackjackView.swift */,
+				0B130EFD0AF4DDC3714F5BA9 /* BlackjackViewModel.swift */,
+			);
+			path = Blackjack;
+			sourceTree = "<group>";
+		};
+		524F28522D18903BA16EB90D /* App */ = {
+			isa = PBXGroup;
+			children = (
+				3D592F79F2989F8CCF768BA5 /* AppModel.swift */,
+				2636D03F80F79B3A3169F85D /* BlackCasinoApp.swift */,
+				0373B7A0D213EB0CD9ACF32E /* RootView.swift */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+		68024C6FE7ACDC89811F429F /* BlackCasino */ = {
+			isa = PBXGroup;
+			children = (
+				524F28522D18903BA16EB90D /* App */,
+				97C330A4B34EEB7164188096 /* Design */,
+				01E20C908477261CCE916CAA /* Games */,
+				07A150FCF9291911A54DEBD0 /* Resources */,
+				E52D447BFA8FFC1B0D42962B /* Scene3D */,
+				ED782351FAF5F01B9D4A2E38 /* Screens */,
+			);
+			path = BlackCasino;
+			sourceTree = "<group>";
+		};
+		6E36EF81415750125A0D6E2E /* Poker */ = {
+			isa = PBXGroup;
+			children = (
+				776DF4AE00AEFCA77075F119 /* PokerTable.swift */,
+				9A030D567612CCD5E86435FB /* PokerView.swift */,
+				B796A493E876EC8293407DAF /* PokerViewModel.swift */,
+			);
+			path = Poker;
+			sourceTree = "<group>";
+		};
+		97C330A4B34EEB7164188096 /* Design */ = {
+			isa = PBXGroup;
+			children = (
+				96D347E774A71B89632C37FE /* Components.swift */,
+				2BD4D5B160C9645C4B737138 /* Effects.swift */,
+				BD566D9E2C6C294CBA2B8B75 /* Haptics.swift */,
+				539A3CFD5B7FD648EA9133C8 /* Theme.swift */,
+			);
+			path = Design;
+			sourceTree = "<group>";
+		};
+		D1EFDAAFC60B1935EFCF4326 = {
+			isa = PBXGroup;
+			children = (
+				68024C6FE7ACDC89811F429F /* BlackCasino */,
+				F44F974F74A9106D6196EF4A /* Packages */,
+				1FBFC1464A5C21115CDBB008 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		E52D447BFA8FFC1B0D42962B /* Scene3D */ = {
+			isa = PBXGroup;
+			children = (
+				B414E65661F57AB4986EE525 /* CardNode.swift */,
+				3CDBB235D864FDA9C86D3C52 /* CasinoStage.swift */,
+				9625D2C9DA2C497FA73F073D /* ChipStackNode.swift */,
+				C4FAB4BBF48723CADE58EDBA /* DealerAvatar.swift */,
+				1C6AFAC82B1CD1F8B8CE5174 /* SceneContainer.swift */,
+				20451718197EAB1A4A89105B /* SceneKitSupport.swift */,
+				C89F331569579B3EBC254544 /* TextureFactory.swift */,
+			);
+			path = Scene3D;
+			sourceTree = "<group>";
+		};
+		ED782351FAF5F01B9D4A2E38 /* Screens */ = {
+			isa = PBXGroup;
+			children = (
+				12586C00F22BAC7C91BFEC29 /* GameChrome.swift */,
+				3BC3774F823FF4C6CD9FEF26 /* LoadingView.swift */,
+				E7E92C06102B90589821A0A9 /* MainMenuView.swift */,
+				CD57440A54A87FFA71CC6A05 /* ProfileView.swift */,
+				CFA5A56462270AC7C52E269F /* RewardsViews.swift */,
+				CF20623B5C7AA0B25CA3879A /* StartView.swift */,
+			);
+			path = Screens;
+			sourceTree = "<group>";
+		};
+		F0CFA0E0F36F54293890DF94 /* Slots */ = {
+			isa = PBXGroup;
+			children = (
+				D8ADBB2C3F60149A12F85F14 /* SlotMachineView.swift */,
+				F0F7780C1828029CC90C9D48 /* SlotsLobbyView.swift */,
+				39DB4ABCD57F4FEB1DCAD27C /* SlotsViewModel.swift */,
+				F512DFFDDF4E17D25BD23218 /* SlotTheme.swift */,
+			);
+			path = Slots;
+			sourceTree = "<group>";
+		};
+		F44F974F74A9106D6196EF4A /* Packages */ = {
+			isa = PBXGroup;
+			children = (
+				B6B72A51EC3060C98A438943 /* CasinoCore */,
+			);
+			path = Packages;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		06F051104A02975ECFA4A775 /* BlackCasino */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 872C6B6CA376F57CB63BA571 /* Build configuration list for PBXNativeTarget "BlackCasino" */;
+			buildPhases = (
+				DBC951ECBA0686934A6F83AC /* Sources */,
+				4FFE232C44481375FF3B9CAC /* Resources */,
+				8D4B108F9B0AC5D3BBD9EB10 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = BlackCasino;
+			packageProductDependencies = (
+				C67281C8223346B5A13BDBD6 /* CasinoCore */,
+			);
+			productName = BlackCasino;
+			productReference = D6EBA5E74AF4280EF393281E /* BlackCasino.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		2B141540C72CE2DEF49043B5 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1430;
+				TargetAttributes = {
+					06F051104A02975ECFA4A775 = {
+						ProvisioningStyle = Automatic;
+					};
+				};
+			};
+			buildConfigurationList = 3CE5E08129E20B58E064DA95 /* Build configuration list for PBXProject "BlackCasino" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = de;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				de,
+			);
+			mainGroup = D1EFDAAFC60B1935EFCF4326;
+			packageReferences = (
+				9170A364CC92EBA5664651D8 /* XCLocalSwiftPackageReference "Packages/CasinoCore" */,
+			);
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				06F051104A02975ECFA4A775 /* BlackCasino */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		4FFE232C44481375FF3B9CAC /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				336EAE541ACB5B9F952B1F28 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		DBC951ECBA0686934A6F83AC /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				29ED77EF64AE636177ABE478 /* AppModel.swift in Sources */,
+				04BA7DC8F582765118722056 /* BlackCasinoApp.swift in Sources */,
+				01334CD4E653C5E0C903365C /* BlackjackTable.swift in Sources */,
+				25208C3657EE9DADA539EE74 /* BlackjackView.swift in Sources */,
+				AD075CDCB906A265E162AD77 /* BlackjackViewModel.swift in Sources */,
+				88657FE077226B7E2642DCB4 /* CardNode.swift in Sources */,
+				6D679B7DC86327E332213128 /* CasinoStage.swift in Sources */,
+				A7A2F8ECFABA66E1DB4346FF /* ChipStackNode.swift in Sources */,
+				24DE519A9482696DD9BFEAD4 /* Components.swift in Sources */,
+				FD3DDFAF8C9FA737552E0D9E /* DealerAvatar.swift in Sources */,
+				621F938C3478FEC4C15A1C9F /* Effects.swift in Sources */,
+				8DFA16EE6305637328AE5747 /* GameChrome.swift in Sources */,
+				8D1FC7DE7831CB2F37E13527 /* Haptics.swift in Sources */,
+				6BC2140DA7005E8E830160D9 /* LoadingView.swift in Sources */,
+				355FFC0FE4995B4FE3578CD8 /* MainMenuView.swift in Sources */,
+				3D6D51082F6707480CD1CCE5 /* PokerTable.swift in Sources */,
+				8B4572FF101F62562E7873D3 /* PokerView.swift in Sources */,
+				BBE44873130DF9ECA3B90007 /* PokerViewModel.swift in Sources */,
+				C931E35E5E3B878967A7E88D /* ProfileView.swift in Sources */,
+				D2DE9FB9745E45098A3AEEA5 /* RewardsViews.swift in Sources */,
+				D8F8583DB3EA6C23FA3425CB /* RootView.swift in Sources */,
+				64D324E411CAEB778FA7FAC1 /* SceneContainer.swift in Sources */,
+				F3531DA63D11180201CF83CC /* SceneKitSupport.swift in Sources */,
+				465F1DA79F5EF1FE4F702CE2 /* SlotMachineView.swift in Sources */,
+				7B5AB9F63838A732CC99241F /* SlotTheme.swift in Sources */,
+				A9B1F4AFDCD35DAD6F0312EB /* SlotsLobbyView.swift in Sources */,
+				96DE84F6B9534EB913A82101 /* SlotsViewModel.swift in Sources */,
+				48164A9613776B3B12BDF3EA /* StartView.swift in Sources */,
+				7AECCE242CE43B0E7C171EA6 /* TextureFactory.swift in Sources */,
+				3E41BC66746500A8364A3CE4 /* Theme.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		127126A9A14D12B4EF12FB38 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_PREVIEWS = YES;
+				INFOPLIST_FILE = BlackCasino/Resources/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.blackcasino.app;
+				PRODUCT_NAME = BlackCasino;
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 2;
+			};
+			name = Release;
+		};
+		16C79330B304D2E6C49211F9 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		19987F5C31156CB97EDEE7A4 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_PREVIEWS = YES;
+				INFOPLIST_FILE = BlackCasino/Resources/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.blackcasino.app;
+				PRODUCT_NAME = BlackCasino;
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 2;
+			};
+			name = Debug;
+		};
+		CBCD91DCB0E4AFD9FF6C3AFA /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		3CE5E08129E20B58E064DA95 /* Build configuration list for PBXProject "BlackCasino" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				16C79330B304D2E6C49211F9 /* Debug */,
+				CBCD91DCB0E4AFD9FF6C3AFA /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		872C6B6CA376F57CB63BA571 /* Build configuration list for PBXNativeTarget "BlackCasino" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				19987F5C31156CB97EDEE7A4 /* Debug */,
+				127126A9A14D12B4EF12FB38 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		9170A364CC92EBA5664651D8 /* XCLocalSwiftPackageReference "Packages/CasinoCore" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = Packages/CasinoCore;
+		};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		C67281C8223346B5A13BDBD6 /* CasinoCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = CasinoCore;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = 2B141540C72CE2DEF49043B5 /* Project object */;
+}
