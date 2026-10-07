@@ -24,6 +24,8 @@ final class BlackjackViewModel {
     }
 
     static let chipValues = [5, 25, 100, 500, 1_000, 5_000]
+    /// Regelwerk dieses Tisches (wird auch im „Rules“-Bereich angezeigt).
+    static let tableRules = BlackjackRules(minBet: 10, maxBet: 10_000)
 
     private(set) var stage: Stage = .betting
     var pendingBet = 0
@@ -43,7 +45,7 @@ final class BlackjackViewModel {
 
     init(app: AppModel) {
         self.app = app
-        rules = BlackjackRules(minBet: 10, maxBet: 10_000)
+        rules = Self.tableRules
         engine = BlackjackEngine(rules: rules, random: app.random)
         table = BlackjackTable(reducedEffects: app.profile.settings.reducedMotion)
         pendingBet = min(100, max(rules.minBet, app.chips))
@@ -160,8 +162,8 @@ final class BlackjackViewModel {
         for event in events {
             switch event {
             case .shuffled:
-                app?.show(Toast(icon: "shuffle", title: "Neuer Schlitten", subtitle: "6 Decks wurden frisch gemischt"))
-                await sceneDelay(0.3)
+                // Jede Runde beginnt mit einem frisch gemischten Deck – nichts anzuzeigen.
+                break
 
             case let .dealtToPlayer(handID, card):
                 await table.dealToPlayer(handID: handID, card: card, rotated: doubled.contains(handID))
@@ -221,6 +223,7 @@ final class BlackjackViewModel {
             stake: stake,
             payout: payout,
             handsWon: results.filter { $0.outcome == .win || $0.outcome == .blackjack }.count,
+            pushes: results.filter { $0.outcome == .push }.count,
             blackjacks: results.filter { $0.outcome == .blackjack }.count,
             hands: results.count
         ))

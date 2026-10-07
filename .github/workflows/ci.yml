@@ -30,9 +30,11 @@ jobs:
         run: xcodegen generate
       - name: Build for iPad Simulator
         run: |
-          set -o pipefail
           xcodebuild build \
             -project BlackCasino.xcodeproj \
             -scheme BlackCasino \
             -destination 'generic/platform=iOS Simulator' \
-            CODE_SIGNING_ALLOWED=NO | tail -n 200
+            CODE_SIGNING_ALLOWED=NO > build.log 2>&1 && STATUS=0 || STATUS=$?
+          grep -E "error:|warning: .*(isolated|Sendable)" build.log | sort -u | head -150 || true
+          tail -n 15 build.log
+          exit $STATUS

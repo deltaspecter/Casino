@@ -12,13 +12,12 @@ public enum ClaimError: Error, Equatable {
 
 /// Ergebnis einer Spielrunde aus Sicht des Fortschrittssystems.
 public enum GameEvent: Equatable {
-    case blackjackRound(stake: Int, payout: Int, handsWon: Int, blackjacks: Int, hands: Int)
+    case blackjackRound(stake: Int, payout: Int, handsWon: Int, pushes: Int, blackjacks: Int, hands: Int)
     case pokerHand(contributed: Int, won: Int)
     case slotSpin(bet: Int, payout: Int)
 }
 
 public enum ProgressNotification: Equatable {
-    case levelUp(level: Int, reward: Int)
     case missionCompleted(MissionDefinition)
     case achievementUnlocked(AchievementDefinition)
 }
@@ -71,25 +70,6 @@ public extension PlayerProfile {
         return amount
     }
 
-    // MARK: - Level
-
-    var xpForNextLevel: Int { RewardTable.xpToNextLevel(from: level) }
-    var levelProgress: Double { min(1, Double(xp) / Double(xpForNextLevel)) }
-
-    mutating func addXP(_ amount: Int) -> [ProgressNotification] {
-        guard amount > 0 else { return [] }
-        xp += amount
-        var notes: [ProgressNotification] = []
-        while xp >= xpForNextLevel {
-            xp -= xpForNextLevel
-            level += 1
-            let reward = RewardTable.levelUpReward(newLevel: level)
-            credit(reward)
-            notes.append(.levelUp(level: level, reward: reward))
-        }
-        return notes
-    }
-
     // MARK: - Tägliche Belohnungen
 
     func loginBonusOffer(now: Date, calendar: Calendar = .current) -> LoginBonusOffer? {
@@ -125,7 +105,7 @@ public extension PlayerProfile {
     @discardableResult
     mutating func claimDailyReward(now: Date, calendar: Calendar = .current) throws -> Int {
         guard canClaimDailyReward(now: now, calendar: calendar) else { throw ClaimError.alreadyClaimed }
-        let amount = RewardTable.dailyReward(level: level)
+        let amount = RewardTable.dailyReward
         lastDailyRewardDate = now
         credit(amount)
         return amount
@@ -156,7 +136,8 @@ public extension PlayerProfile {
     // MARK: - Missionen
 
     /// Stellt sicher, dass für den heutigen Tag Missionen vorhanden sind.
-    /// Die Auswahl der Tagesmissionen erfolgt zufällig aus dem Pool.
+    /// Die Auswahl der Tagesmissionen erfolgt zufällig aus dem Pool – mit einer eigenen
+    /// Zufallsquelle, die mit den Spielen nichts zu tun hat.
     mutating func refreshDailyMissions(now: Date, random: RandomSource, calendar: Calendar = .current) {
         if let date = missionsDate, calendar.isDate(date, inSameDayAs: now), !dailyMissions.isEmpty { return }
         var pool = RewardTable.missionPool
@@ -180,13 +161,14 @@ public extension PlayerProfile {
         guard dailyMissions[index].progress >= def.target else { throw ClaimError.notAvailable }
         dailyMissions[index].isClaimed = true
         credit(def.rewardChips)
-        return addXP(def.rewardXP) + checkAchievements()
+        return checkAchievements()
     }
 
     // MARK: - Erfolge
 
     func metricValue(_ metric: ProgressMetric) -> Int {
         switch metric {
+        case .blackjackRounds: return stats.blackjackRounds
         case .blackjackHands: return stats.blackjackHands
         case .blackjackWins: return stats.blackjackWins
         case .blackjacks: return stats.blackjacks
@@ -194,9 +176,10 @@ public extension PlayerProfile {
         case .pokerWins: return stats.pokerWins
         case .slotSpins: return stats.slotSpins
         case .slotWins: return stats.slotWins
+        case .gamesPlayed: return stats.gamesPlayed
+        case .roundsWon: return stats.roundsWon
         case .chipsWagered: return stats.totalWagered
         case .biggestWin: return stats.biggestWin
-        case .level: return level
         case .peakChips: return stats.peakChips
         case .loginStreak: return loginStreak
         }
@@ -224,19 +207,23 @@ public extension PlayerProfile {
 
     // MARK: - Spielereignisse
 
-    /// Verbucht Statistiken, Missionsfortschritt, XP und Erfolge.
-    /// Chips werden hier **nicht** bewegt – das passiert über `debit`/`credit` im Spiel.
+    /// Verbucht Statistik, Missionsfortschritt und Erfolge.
+    /// Chips werden hier **nicht** bewegt – das passiert über die Wallet-Funktionen.
+    /// Diese Daten fließen in keine Spiel-Engine zurück.
     mutating func record(_ event: GameEvent) -> [ProgressNotification] {
         var deltas: [ProgressMetric: Int] = [:]
         let stake: Int
         let net: Int
 
         switch event {
-        case let .blackjackRound(s, payout, handsWon, blackjacks, hands):
+        case let .blackjackRound(s, payout, handsWon, pushes, blackjacks, hands):
             stake = s; net = payout - s
+            stats.blackjackRounds += 1
             stats.blackjackHands += hands
             stats.blackjackWins += handsWon
+            stats.blackjackPushes += pushes
             stats.blackjacks += blackjacks
+            deltas[.blackjackRounds] = 1
             deltas[.blackjackHands] = hands
             deltas[.blackjackWins] = handsWon
             deltas[.blackjacks] = blackjacks
@@ -258,11 +245,16 @@ public extension PlayerProfile {
             }
         }
 
+        deltas[.gamesPlayed] = 1
         stats.totalWagered += stake
         deltas[.chipsWagered] = stake
         if net > 0 {
+            stats.roundsWon += 1
+            deltas[.roundsWon] = 1
             stats.totalWon += net
             stats.biggestWin = max(stats.biggestWin, net)
+        } else if net < 0 {
+            stats.totalLost += -net
         }
 
         var notes: [ProgressNotification] = []
@@ -274,7 +266,6 @@ public extension PlayerProfile {
                 notes.append(.missionCompleted(def))
             }
         }
-        notes += addXP(RewardTable.xp(forStake: stake))
         notes += checkAchievements()
         return notes
     }

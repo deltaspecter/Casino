@@ -147,7 +147,7 @@ public final class HoldemEngine {
     public private(set) var seats: [PokerSeat]
     public private(set) var community: [Card] = []
     public private(set) var street: PokerStreet = .showdown
-    public private(set) var buttonIndex: Int
+    public internal(set) var buttonIndex: Int
     public private(set) var currentIndex: Int?
     public private(set) var currentBet = 0
     public private(set) var lastRaiseSize = 0
@@ -156,6 +156,8 @@ public final class HoldemEngine {
     public private(set) var lastShowdown: [ShowdownEntry] = []
     public private(set) var lastAwards: [PotAward] = []
     private var deck: [Card] = []
+    /// Nur für Unit-Tests (über `@testable import`): feste Ziehreihenfolge der nächsten Hand.
+    var testDeckForNextHand: [Card]?
 
     public init(seats: [PokerSeat], smallBlind: Int, bigBlind: Int, random: RandomSource) {
         precondition(seats.count >= 2 && seats.count <= 9)
@@ -227,8 +229,14 @@ public final class HoldemEngine {
         }
 
         buttonIndex = nextIndex(after: buttonIndex) { !$0.isSittingOut }
-        deck = Card.standardDeck()
-        random.shuffle(&deck)
+        // RNG → frisch gemischtes 52-Karten-Deck → Ausgabe. Die KI hat hierauf keinen Zugriff.
+        if let testDeck = testDeckForNextHand {
+            deck = testDeck.reversed()
+            testDeckForNextHand = nil
+        } else {
+            deck = Card.standardDeck()
+            random.shuffle(&deck)
+        }
 
         var events: [PokerEvent] = [.handStarted(handNumber: handNumber, buttonSeatID: seats[buttonIndex].id)]
 

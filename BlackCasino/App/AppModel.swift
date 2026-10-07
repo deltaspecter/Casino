@@ -15,8 +15,12 @@ final class AppModel {
     var pendingLoginBonus: LoginBonusOffer?
     private(set) var storageWarning: String?
 
-    /// Einzige produktive Zufallsquelle der App (kryptografisch sicher).
+    /// Zufallsquelle für Karten und Walzen (kryptografisch sicher).
+    /// Sie wird ausschließlich an die Spiel-Engines übergeben – nichts im Profil
+    /// (Kontostand, Verlauf, Missionen, Erfolge) beeinflusst ihre Werte.
     @ObservationIgnored let random: RandomSource = SystemRandomSource()
+    /// Getrennte Quelle für Nicht-Spiel-Zufall (Auswahl der Tagesmissionen, KI-Stil, Optik).
+    @ObservationIgnored let auxiliaryRandom: RandomSource = SystemRandomSource()
     @ObservationIgnored private let store: ProfileStore?
     @ObservationIgnored private var saveTask: Task<Void, Never>?
 
@@ -42,8 +46,8 @@ final class AppModel {
     func launchFinished() {
         let refunded = profile.refundTableEscrow()
         if refunded > 0 {
-            show(Toast(icon: "arrow.uturn.backward.circle.fill", title: "Tisch-Chips zurückgebucht",
-                       subtitle: "\(ChipFormat.string(refunded)) Chips aus einer unterbrochenen Runde"))
+            show(Toast(icon: "arrow.uturn.backward.circle.fill", title: "Unterbrochene Runde storniert",
+                       subtitle: "\(ChipFormat.string(refunded)) Tisch-Chips wurden zurückgebucht"))
         }
         if let warning = storageWarning {
             show(Toast(icon: "exclamationmark.triangle.fill", title: "Hinweis", subtitle: warning, tint: Theme.red))
@@ -53,7 +57,7 @@ final class AppModel {
     }
 
     func refreshDay() {
-        profile.refreshDailyMissions(now: .now, random: random)
+        profile.refreshDailyMissions(now: .now, random: auxiliaryRandom)
         pendingLoginBonus = profile.loginBonusOffer(now: .now)
     }
 
@@ -145,8 +149,8 @@ final class AppModel {
     func claimMission(_ id: String) {
         guard let def = RewardTable.mission(id), let notes = try? profile.claimMission(id) else { return }
         Haptics.success()
-        show(Toast(icon: "checkmark.seal.fill", title: "Mission abgeschlossen",
-                   subtitle: "+\(ChipFormat.string(def.rewardChips)) Chips · +\(def.rewardXP) XP"))
+        show(Toast(icon: "checkmark.seal.fill", title: "Mission eingelöst",
+                   subtitle: "+\(ChipFormat.string(def.rewardChips)) Chips"))
         present(notes)
         save()
     }
@@ -210,10 +214,6 @@ final class AppModel {
     private func present(_ notes: [ProgressNotification]) {
         for note in notes {
             switch note {
-            case let .levelUp(level, reward):
-                Haptics.success()
-                show(Toast(icon: "arrow.up.circle.fill", title: "Level \(level) erreicht!",
-                           subtitle: "+\(ChipFormat.string(reward)) Chips", tint: Theme.redBright))
             case let .missionCompleted(def):
                 show(Toast(icon: "flag.checkered", title: "Mission erfüllt", subtitle: def.title + " – jetzt einlösen"))
             case let .achievementUnlocked(def):

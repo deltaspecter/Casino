@@ -22,6 +22,7 @@ private struct BlackjackScreen: View {
     @Environment(AppModel.self) private var model
     let viewModel: BlackjackViewModel
     @State private var showTutorial = false
+    @State private var showRules = false
 
     var body: some View {
         ZStack {
@@ -36,8 +37,9 @@ private struct BlackjackScreen: View {
 
             VStack(spacing: 0) {
                 GameTopBar(title: "BLACKJACK",
-                           subtitle: "6 Decks · Dealer steht auf 17 · Blackjack zahlt 3:2",
+                           subtitle: "1 Deck, jede Runde neu gemischt · Dealer steht auf 17 · Blackjack 3:2",
                            onLeave: { viewModel.leave() },
+                           onRules: { showRules = true },
                            onHelp: { showTutorial = true })
                 Spacer()
                 if let summary = viewModel.summary, viewModel.stage == .roundOver {
@@ -57,6 +59,7 @@ private struct BlackjackScreen: View {
         }
         .onDisappear { viewModel.leave() }
         .sheet(isPresented: $showTutorial) { TutorialSheet(game: .blackjack) }
+        .sheet(isPresented: $showRules) { RulesSheet(game: .blackjack) }
     }
 
     // MARK: - 3D-Labels

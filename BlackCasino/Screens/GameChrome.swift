@@ -9,6 +9,7 @@ struct GameTopBar: View {
     /// Optional abweichender Anzeige-Kontostand (z. B. solange Slot-Walzen noch drehen).
     var balance: Int?
     var onLeave: () -> Void = {}
+    var onRules: (() -> Void)?
     var onHelp: (() -> Void)?
 
     var body: some View {
@@ -25,6 +26,15 @@ struct GameTopBar: View {
             }
             Spacer()
             ChipBalanceView(amount: balance ?? model.chips)
+            if let onRules {
+                Button {
+                    Haptics.tap()
+                    onRules()
+                } label: {
+                    Label("RULES", systemImage: "book.closed.fill")
+                }
+                .buttonStyle(.casino(.secondary, size: .small))
+            }
             if let onHelp {
                 IconButton(systemName: "questionmark", action: onHelp)
             }
@@ -149,7 +159,7 @@ enum Tutorials {
                 TutorialPage(icon: "target", title: "Ziel", text: "Komm näher an 21 als der Dealer, ohne 21 zu überschreiten. Bildkarten zählen 10, Asse 1 oder 11."),
                 TutorialPage(icon: "hand.tap.fill", title: "Aktionen", text: "Hit: weitere Karte · Stand: stehen bleiben · Double: Einsatz verdoppeln, genau eine Karte · Split: Paar in zwei Hände teilen."),
                 TutorialPage(icon: "person.fill", title: "Dealer-Regeln", text: "Der Dealer zieht bis 17 und steht auf allen 17. Ein Blackjack (Ass + 10er) zahlt 3:2."),
-                TutorialPage(icon: "shuffle", title: "Fair & zufällig", text: "Gespielt wird mit 6 Decks, gemischt per Fisher-Yates mit einem kryptografisch sicheren Zufallsgenerator. Nichts ist vorherbestimmt.")
+                TutorialPage(icon: "shuffle", title: "Fair & zufällig", text: "Gespielt wird mit einem 52-Karten-Deck, das vor jeder Runde per Fisher-Yates mit einem kryptografisch sicheren Zufallsgenerator neu gemischt wird. Nichts ist vorherbestimmt.")
             ]
         case .poker:
             return [

@@ -65,17 +65,12 @@ struct LoadingView: View {
             ("Tische werden beleuchtet", { TextureFactory.preloadTables() }),
             ("Automaten werden kalibriert", { _ = SlotInfo.reports })
         ]
-        let start = Date()
         for (index, step) in steps.enumerated() {
-            withAnimation(.easeInOut(duration: 0.3)) { status = step.0 }
+            status = step.0
             await Task.detached(priority: .userInitiated) { step.1() }.value
-            withAnimation(.easeInOut(duration: 0.5)) { progress = Double(index + 1) / Double(steps.count) }
+            withAnimation(.easeInOut(duration: 0.25)) { progress = Double(index + 1) / Double(steps.count) }
         }
-        // Mindestanzeigedauer, damit die Animation wirken kann
-        let elapsed = Date().timeIntervalSince(start)
-        if elapsed < 2.2 { try? await Task.sleep(for: .seconds(2.2 - elapsed)) }
-        withAnimation(.easeInOut(duration: 0.3)) { status = "Willkommen" }
-        try? await Task.sleep(for: .milliseconds(350))
+        // Keine künstliche Wartezeit: Sobald alles geladen ist, geht es weiter.
         model.phase = .start
     }
 }

@@ -1,11 +1,17 @@
 import Foundation
 
-/// Tischregeln. Standard: 6 Decks, Dealer steht auf allen 17 (S17),
-/// Blackjack zahlt 3:2, Double auf beliebige zwei Karten, Double nach Split erlaubt,
-/// bis zu 4 Hände durch Split, Asse nur einmal splitbar (je eine Karte).
+/// Tischregeln von BlackCasino (im Spiel unter „Rules“ einsehbar):
+/// * 1 Standard-Deck (52 Karten), **vor jeder Runde vollständig neu gemischt** –
+///   dadurch ist jede Runde unabhängig von allen vorherigen.
+/// * Dealer erhält eine offene und eine verdeckte Karte und prüft bei Ass oder 10er auf Blackjack (Peek).
+/// * Dealer zieht bis 16 und **steht auf allen 17** (auch Soft 17, „S17“).
+/// * Blackjack zahlt 3:2, normaler Gewinn 1:1, Push gibt den Einsatz zurück.
+/// * Double Down auf beliebige erste zwei Karten (auch nach Split), genau eine weitere Karte.
+/// * Split bei zwei Karten gleichen Werts, bis zu 4 Hände; geteilte Asse erhalten je eine Karte
+///   und dürfen nicht erneut geteilt werden. 21 nach Split zählt nicht als Blackjack.
+/// * Keine Insurance, kein Surrender.
 public struct BlackjackRules: Equatable {
-    public var deckCount = 6
-    public var penetration = 0.75
+    public var deckCount = 1
     public var dealerHitsSoft17 = false
     public var doubleAfterSplit = true
     public var maxHands = 4
@@ -61,11 +67,14 @@ public final class BlackjackEngine {
     public private(set) var activeHandIndex: Int?
     public private(set) var results: [HandResult] = []
     private var nextHandID = 0
+    /// Nur für Unit-Tests (über `@testable import` erreichbar): feste Kartenreihenfolge
+    /// für die nächste Runde, um Regel-Szenarien gezielt zu prüfen. Die App kann dies nicht setzen.
+    var testDeckForNextRound: [Card]?
 
     public init(rules: BlackjackRules = BlackjackRules(), random: RandomSource) {
         self.rules = rules
         self.random = random
-        self.shoe = Shoe(deckCount: rules.deckCount, penetration: rules.penetration, random: random)
+        self.shoe = Shoe(deckCount: rules.deckCount, random: random)
     }
 
     // MARK: - Abfragen
@@ -119,10 +128,14 @@ public final class BlackjackEngine {
         activeHandIndex = nil
         nextHandID = 0
 
-        if shoe.needsReshuffle {
+        // RNG → Mischen → Ausgabe → Regeln → Ergebnis. Jede Runde startet mit frisch gemischtem Deck.
+        if let testDeck = testDeckForNextRound {
+            shoe.setOrderForTesting(testDeck)
+            testDeckForNextRound = nil
+        } else {
             shoe.reshuffle(random: random)
-            events.append(.shuffled)
         }
+        events.append(.shuffled)
 
         hands.append(BlackjackHand(id: makeHandID(), cards: [], bet: bet))
 

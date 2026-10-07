@@ -44,7 +44,7 @@ final class SlotsViewModel {
         theme = SlotTheme.forMachine(def.id)
         self.app = app
         // Startbild: zufällige Walzenpositionen (nur Optik, kein Spielergebnis)
-        stops = def.reelStrips.map { app.random.uniform($0.count) }
+        stops = def.reelStrips.map { app.auxiliaryRandom.uniform($0.count) }
         reels = stops.enumerated().map { reel, stop in
             let strip = def.reelStrips[reel]
             let n = strip.count
@@ -79,8 +79,8 @@ final class SlotsViewModel {
         celebration = nil
         Haptics.thud()
 
-        // Das Ergebnis wird sofort und unabhängig berechnet und verbucht.
-        // Die Animation zeigt es nur an.
+        // RNG → Ergebnis: Die Stopppositionen werden hier, vor jeder Animation, gezogen
+        // und sofort verbucht. Die Walzenanimation zeigt danach nur dieses feste Ergebnis.
         let result = machine.spin(lineBet: lineBet, random: app.random)
         lastResult = result
         if result.totalPayout > 0 {

@@ -37,25 +37,8 @@ struct MainMenuView: View {
                 .fixedSize()
             Spacer()
             ChipBalanceView(amount: model.chips)
-            Button {
-                Haptics.tap()
-                sheet = .profile
-            } label: {
-                HStack(spacing: 12) {
-                    LevelBadge(level: model.profile.level, progress: model.profile.levelProgress, size: 46)
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(model.profile.displayName).font(.system(size: 16, weight: .bold)).foregroundStyle(.white)
-                        Text("\(model.profile.xp) / \(model.profile.xpForNextLevel) XP")
-                            .font(.system(size: 12, weight: .medium)).foregroundStyle(Theme.textSecondary)
-                    }
-                }
-                .padding(.leading, 6)
-                .padding(.trailing, 16)
-                .padding(.vertical, 6)
-                .glassPanel(cornerRadius: 40)
-            }
-            .buttonStyle(.plain)
-            .accessibilityLabel("Profil, Level \(model.profile.level)")
+            IconButton(systemName: "gearshape.fill") { sheet = .settings }
+                .accessibilityLabel("Einstellungen")
         }
     }
 
@@ -81,21 +64,25 @@ struct MainMenuView: View {
     // MARK: - Belohnungen
 
     private func extras(landscape: Bool) -> some View {
-        let completedMissions = model.profile.dailyMissions.filter { model.profile.isMissionComplete($0) && !$0.isClaimed }.count
-        let claimedMissions = model.profile.dailyMissions.filter(\.isClaimed).count
-        let unclaimedAchievements = model.profile.unlockedAchievements.subtracting(model.profile.claimedAchievements).count
-        let layout = landscape ? AnyLayout(HStackLayout(spacing: 18)) : AnyLayout(VStackLayout(spacing: 14))
+        let p = model.profile
+        let missionsReady = p.dailyMissions.filter { p.isMissionComplete($0) && !$0.isClaimed }.count
+        let missionsClaimed = p.dailyMissions.filter(\.isClaimed).count
+        let achievementsReady = p.unlockedAchievements.subtracting(p.claimedAchievements).count
 
-        return layout {
+        return LazyVGrid(columns: [GridItem(.adaptive(minimum: landscape ? 200 : 260), spacing: 16)], spacing: 16) {
             ExtraCard(icon: "gift.fill", title: "DAILY REWARD",
-                      detail: model.canClaimDailyReward ? "Jetzt abholen" : "Morgen wieder verfügbar",
+                      detail: model.canClaimDailyReward ? "Jetzt abholen" : "Morgen wieder",
                       badge: model.canClaimDailyReward ? "1" : nil) { sheet = .dailyReward }
             ExtraCard(icon: "flag.checkered", title: "MISSIONS",
-                      detail: "\(claimedMissions)/\(model.profile.dailyMissions.count) erledigt",
-                      badge: completedMissions > 0 ? "\(completedMissions)" : nil) { sheet = .missions }
+                      detail: "\(missionsClaimed)/\(p.dailyMissions.count) erledigt",
+                      badge: missionsReady > 0 ? "\(missionsReady)" : nil) { sheet = .missions }
             ExtraCard(icon: "trophy.fill", title: "ACHIEVEMENTS",
-                      detail: "\(model.profile.unlockedAchievements.count)/\(RewardTable.achievements.count) freigeschaltet",
-                      badge: unclaimedAchievements > 0 ? "\(unclaimedAchievements)" : nil) { sheet = .achievements }
+                      detail: "\(p.unlockedAchievements.count)/\(RewardTable.achievements.count)",
+                      badge: achievementsReady > 0 ? "\(achievementsReady)" : nil) { sheet = .achievements }
+            ExtraCard(icon: "chart.bar.fill", title: "STATISTICS",
+                      detail: "\(ChipFormat.string(p.stats.gamesPlayed)) Runden", badge: nil) { sheet = .statistics }
+            ExtraCard(icon: "gearshape.fill", title: "SETTINGS",
+                      detail: "Regeln & Fairness", badge: nil) { sheet = .settings }
         }
     }
 }
@@ -211,13 +198,15 @@ private struct ExtraCard: View {
         } label: {
             HStack(spacing: 16) {
                 Image(systemName: icon)
-                    .font(.system(size: 24, weight: .bold))
+                    .font(.system(size: 22, weight: .bold))
                     .foregroundStyle(Theme.goldGradient)
-                    .frame(width: 56, height: 56)
+                    .frame(width: 50, height: 50)
                     .background(Circle().fill(Theme.gold.opacity(0.12)))
                 VStack(alignment: .leading, spacing: 3) {
-                    Text(title).font(.display(16, weight: .heavy)).tracking(1).foregroundStyle(.white)
-                    Text(detail).font(.system(size: 14)).foregroundStyle(Theme.textSecondary)
+                    Text(title).font(.display(15, weight: .heavy)).tracking(1).foregroundStyle(.white)
+                        .lineLimit(1).minimumScaleFactor(0.7)
+                    Text(detail).font(.system(size: 13)).foregroundStyle(Theme.textSecondary)
+                        .lineLimit(1).minimumScaleFactor(0.8)
                 }
                 Spacer(minLength: 0)
                 if let badge {

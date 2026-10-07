@@ -9,7 +9,7 @@ enum Route: Hashable {
 }
 
 enum MenuSheet: String, Identifiable {
-    case dailyReward, missions, achievements, profile
+    case dailyReward, missions, achievements, statistics, settings
     var id: String { rawValue }
 }
 
@@ -67,7 +67,8 @@ struct LobbyContainer: View {
                 case .dailyReward: DailyRewardView()
                 case .missions: MissionsView()
                 case .achievements: AchievementsView()
-                case .profile: ProfileView()
+                case .statistics: StatisticsView()
+                case .settings: SettingsView()
                 }
             }
             .presentationDetents([.large])

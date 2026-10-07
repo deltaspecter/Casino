@@ -11,13 +11,12 @@ final class CardsAndRandomTests: XCTestCase {
         }
     }
 
-    func testShoeSignalsReshuffleAfterPenetration() {
+    func testShoeDrawsWithoutDuplicates() {
         let random = SeededRandomSource(seed: 2)
-        var shoe = Shoe(deckCount: 1, penetration: 0.5, random: random)
-        for _ in 0..<25 { _ = shoe.draw(random: random) }
-        XCTAssertFalse(shoe.needsReshuffle)
-        _ = shoe.draw(random: random)
-        XCTAssertTrue(shoe.needsReshuffle)
+        var shoe = Shoe(deckCount: 1, random: random)
+        let drawn = (0..<52).map { _ in shoe.draw(random: random) }
+        XCTAssertEqual(Set(drawn.map(\.id)).count, 52)
+        XCTAssertEqual(shoe.remaining, 0)
     }
 
     func testShuffleIsUniformEnough() {

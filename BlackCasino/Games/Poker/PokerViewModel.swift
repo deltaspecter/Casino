@@ -105,11 +105,11 @@ final class PokerViewModel {
     private func makeOpponent(id: Int, avoiding used: inout Set<String>) -> PokerSeat {
         guard let app else { return PokerSeat(id: id, name: "KI \(id)", isHuman: false, style: .shark, stack: 1_000) }
         let available = Self.names.filter { !used.contains($0) }
-        let name = app.random.pick(available) ?? "KI \(id)"
+        let name = app.auxiliaryRandom.pick(available) ?? "KI \(id)"
         used.insert(name)
-        let style = app.random.pick(PokerStyle.allCases) ?? .shark
+        let style = app.auxiliaryRandom.pick(PokerStyle.allCases) ?? .shark
         let steps = (selectedTable.maxBuyIn - selectedTable.minBuyIn) / selectedTable.bigBlind
-        let stack = selectedTable.minBuyIn + app.random.uniform(steps + 1) * selectedTable.bigBlind
+        let stack = selectedTable.minBuyIn + app.auxiliaryRandom.uniform(steps + 1) * selectedTable.bigBlind
         return PokerSeat(id: id, name: name, isHuman: false, style: style, stack: stack)
     }
 
@@ -191,12 +191,14 @@ final class PokerViewModel {
             }
             thinkingSeatID = seat.id
             // Natürliche Bedenkzeit (rein optisch)
-            await sceneDelay(0.55 + app.random.unitDouble() * 0.8)
+            await sceneDelay(0.55 + app.auxiliaryRandom.unitDouble() * 0.8)
             guard self.engine === engine, engine.currentIndex == index else { return }
 
             let context = PokerAIContext(engine: engine, seatIndex: index)
             let style = seat.style ?? .shark
-            let random = app.random
+            // Die KI nutzt eine eigene Zufallsquelle nur für ihren Spielstil; die Karten
+            // kommen ausschließlich aus dem gemischten Deck der Engine.
+            let random = app.auxiliaryRandom
             let action = await Task.detached(priority: .userInitiated) {
                 PokerAI.decide(context: context, style: style, random: random)
             }.value

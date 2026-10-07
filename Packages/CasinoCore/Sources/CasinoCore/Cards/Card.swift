@@ -62,38 +62,39 @@ public struct Card: Hashable, Codable, Identifiable, CustomStringConvertible {
     }
 }
 
-/// Kartenschlitten mit einem oder mehreren Decks.
+/// Kartenstapel mit einem oder mehreren Decks.
 /// Gemischt wird mit Fisher-Yates über die zentrale `RandomSource`.
 public struct Shoe {
     public let deckCount: Int
-    /// Anteil des Schlittens, der ausgespielt wird, bevor neu gemischt wird.
-    public let penetration: Double
     public private(set) var cards: [Card] = []
     public private(set) var shuffleCount = 0
 
-    public init(deckCount: Int, penetration: Double = 0.75, random: RandomSource) {
+    public init(deckCount: Int, random: RandomSource) {
         precondition(deckCount >= 1)
         self.deckCount = deckCount
-        self.penetration = min(max(penetration, 0.2), 0.95)
         reshuffle(random: random)
     }
 
     public var totalCards: Int { deckCount * 52 }
     public var remaining: Int { cards.count }
-    public var needsReshuffle: Bool {
-        Double(totalCards - remaining) >= Double(totalCards) * penetration
-    }
 
-    /// Setzt alle Karten zurück in den Schlitten und mischt vollständig neu.
+    /// Legt alle Karten zurück und mischt vollständig neu.
     public mutating func reshuffle(random: RandomSource) {
         cards = (0..<deckCount).flatMap { Card.standardDeck(deckIndex: $0) }
         random.shuffle(&cards)
         shuffleCount += 1
     }
 
-    /// Zieht die oberste Karte. Ist der Schlitten leer, wird automatisch neu gemischt.
+    /// Zieht die oberste Karte. Innerhalb einer Blackjack-Runde kann ein Deck rechnerisch nicht
+    /// leer werden (max. 5 Hände à höchstens 31 Punkte < 340 Punkte im Deck). Als reine
+    /// Absicherung gegen Abstürze wird bei leerem Stapel neu gemischt.
     public mutating func draw(random: RandomSource) -> Card {
         if cards.isEmpty { reshuffle(random: random) }
         return cards.removeLast()
+    }
+
+    /// Nur für Tests: Karten in genau dieser Ziehreihenfolge bereitlegen.
+    mutating func setOrderForTesting(_ drawOrder: [Card]) {
+        cards = drawOrder.reversed()
     }
 }

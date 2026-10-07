@@ -39,6 +39,7 @@ private struct SlotMachineScreen: View {
                            subtitle: viewModel.definition.tagline,
                            balance: model.chips - viewModel.pendingWin,
                            onLeave: { viewModel.stopEffects() },
+                           onRules: { showPaytable = true },
                            onHelp: { showTutorial = true })
 
                 GeometryReader { geo in
@@ -117,14 +118,6 @@ private struct SlotMachineScreen: View {
 
     private var controlBar: some View {
         HStack(spacing: 22) {
-            Button { showPaytable = true } label: {
-                VStack(spacing: 2) {
-                    Image(systemName: "list.bullet.rectangle")
-                    Text("GEWINNE").font(.system(size: 11, weight: .bold))
-                }
-            }
-            .buttonStyle(.casino(.ghost, size: .large))
-
             VStack(alignment: .leading, spacing: 4) {
                 Text("EINSATZ").font(.system(size: 12, weight: .bold)).tracking(2).foregroundStyle(Theme.textSecondary)
                 HStack(spacing: 12) {
@@ -255,7 +248,26 @@ private struct PaylinePath: Shape {
     }
 }
 
-/// Auszahlungstabelle, Regeln und exakte Auszahlungsquote.
+/// Mini-Darstellung einer Gewinnlinie im 5×3-Raster.
+private struct PaylineDiagram: View {
+    let line: [Int]
+    let rows: Int
+
+    var body: some View {
+        Canvas { context, size in
+            let cw = size.width / CGFloat(line.count), ch = size.height / CGFloat(rows)
+            for c in 0..<line.count {
+                for r in 0..<rows {
+                    let rect = CGRect(x: CGFloat(c) * cw + 1, y: CGFloat(r) * ch + 1, width: cw - 2, height: ch - 2)
+                    context.fill(Path(roundedRect: rect, cornerRadius: 3),
+                                 with: .color(line[c] == r ? Theme.red : Color.white.opacity(0.08)))
+                }
+            }
+        }
+    }
+}
+
+/// Regelwerk des Automaten: Auszahlungstabelle, Regeln, Gewinnlinien, Wahrscheinlichkeiten und RTP.
 struct PaytableSheet: View {
     @Environment(\.dismiss) private var dismiss
     let definition: SlotMachineDefinition
@@ -264,7 +276,7 @@ struct PaytableSheet: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 26) {
                 HStack {
-                    Text(definition.name.uppercased()).font(.display(26)).foregroundStyle(.white)
+                    Text("RULES · \(definition.name.uppercased())").font(.display(26)).foregroundStyle(.white)
                     Spacer()
                     IconButton(systemName: "xmark", size: 40) { dismiss() }
                 }
@@ -292,11 +304,58 @@ struct PaytableSheet: View {
 
                 SectionTitle(title: "Regeln")
                 VStack(alignment: .leading, spacing: 10) {
-                    rule("Gewinne zählen auf \(definition.paylines.count) Linien von links nach rechts, ab 3 gleichen Symbolen.")
-                    rule("WILD ersetzt alle normalen Symbole, aber kein SCATTER. Pro Linie zählt nur der höchste Gewinn.")
-                    rule("SCATTER zahlt an jeder Position. Linien- und Scatter-Gewinne werden addiert.")
-                    rule("Jede Walze stoppt an einer zufälligen, unabhängig gezogenen Position ihres festen Walzenstreifens.")
+                    rule("\(definition.reelCount) Walzen × \(definition.rows) Reihen, \(definition.paylines.count) feste Gewinnlinien (alle immer aktiv).")
+                    rule("Gesamteinsatz = Linieneinsatz × \(definition.paylines.count). Linieneinsätze: \(definition.lineBetOptions.map(String.init).joined(separator: ", ")).")
+                    rule("Liniengewinne zählen von links nach rechts ab Walze 1, ab 3 gleichen Symbolen. Pro Linie wird nur der höchste Gewinn gezahlt.")
+                    rule("WILD ersetzt alle normalen Symbole, aber keinen SCATTER. Drei oder mehr WILD am Linienanfang zahlen selbst.")
+                    rule("SCATTER zahlt an jeder Position (Anzahl × Tabelle × Gesamteinsatz). Linien- und Scatter-Gewinne werden addiert.")
+                    rule("Es gibt keine Bonus-Symbole, Freispiele oder Jackpots.")
                 }
+
+                SectionTitle(title: "Gewinnlinien")
+                LazyVGrid(columns: [GridItem(.adaptive(minimum: 120), spacing: 12)], spacing: 12) {
+                    ForEach(Array(definition.paylines.enumerated()), id: \.offset) { index, line in
+                        VStack(spacing: 6) {
+                            PaylineDiagram(line: line, rows: definition.rows)
+                                .frame(width: 100, height: 60)
+                            Text("Linie \(index + 1)").font(.system(size: 12, weight: .semibold)).foregroundStyle(Theme.textSecondary)
+                        }
+                        .padding(10)
+                        .background(RoundedRectangle(cornerRadius: 14).fill(Theme.surfaceRaised))
+                    }
+                }
+
+                SectionTitle(title: "Zufall & Wahrscheinlichkeiten",
+                             subtitle: "Jede Walze stoppt an einer gleichverteilt gezogenen Position ihres festen Streifens. Wahrscheinlichkeit eines Symbols an einer Position = Anzahl auf dem Streifen ÷ Streifenlänge.")
+                VStack(spacing: 0) {
+                    HStack {
+                        Text("Symbol").frame(width: 90, alignment: .leading)
+                        ForEach(0..<definition.reelCount, id: \.self) { reel in
+                            Text("Walze \(reel + 1)").frame(maxWidth: .infinity)
+                        }
+                    }
+                    .font(.system(size: 12, weight: .bold))
+                    .foregroundStyle(Theme.textTertiary)
+                    .padding(.vertical, 8)
+                    ForEach(definition.symbols) { symbol in
+                        HStack {
+                            SlotSymbolView(symbolID: symbol.id, size: 36).frame(width: 90, alignment: .leading)
+                            ForEach(0..<definition.reelCount, id: \.self) { reel in
+                                VStack(spacing: 0) {
+                                    Text("\(definition.count(of: symbol.id, onReel: reel))/\(definition.reelStrips[reel].count)")
+                                        .font(.numeric(13, weight: .bold)).foregroundStyle(.white)
+                                    Text(String(format: "%.1f %%", definition.probability(of: symbol.id, onReel: reel) * 100))
+                                        .font(.system(size: 11)).foregroundStyle(Theme.textSecondary)
+                                }
+                                .frame(maxWidth: .infinity)
+                            }
+                        }
+                        .padding(.vertical, 4)
+                        Divider().overlay(Theme.stroke)
+                    }
+                }
+                .padding(14)
+                .glassPanel(cornerRadius: 18)
 
                 SectionTitle(title: "Transparenz")
                 HStack(spacing: 16) {

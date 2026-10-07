@@ -64,7 +64,7 @@ struct DailyRewardView: View {
 
     var body: some View {
         VStack(spacing: 30) {
-            SheetHeader(title: "DAILY REWARD", subtitle: "Einmal pro Tag kostenlose Chips – wächst mit deinem Level.")
+            SheetHeader(title: "DAILY REWARD", subtitle: "Einmal pro Kalendertag kostenlose virtuelle Chips. Hat keinen Einfluss auf Spielergebnisse.")
 
             Spacer()
             ZStack {
@@ -78,7 +78,7 @@ struct DailyRewardView: View {
                     .shadow(color: Theme.gold.opacity(0.6), radius: 30)
                     .scaleEffect(glow ? 1.04 : 0.98)
             }
-            Text("+\(ChipFormat.string(RewardTable.dailyReward(level: model.profile.level))) CHIPS")
+            Text("+\(ChipFormat.string(RewardTable.dailyReward)) CHIPS")
                 .font(.display(40)).foregroundStyle(.white)
 
             if model.canClaimDailyReward {
@@ -113,7 +113,7 @@ struct MissionsView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 22) {
-                SheetHeader(title: "MISSIONS", subtitle: "Drei neue Aufgaben jeden Tag. Erfüllen, einlösen, aufsteigen.")
+                SheetHeader(title: "MISSIONS", subtitle: "Optionale Tagesaufgaben. Sie geben nur zusätzliche Chips – und verändern keine Gewinnchancen.")
                 ForEach(model.profile.dailyMissions) { mission in
                     if let def = RewardTable.mission(mission.missionID) {
                         MissionRow(definition: def, progress: mission.progress, claimed: mission.isClaimed) {
@@ -146,7 +146,7 @@ private struct MissionRow: View {
             VStack(alignment: .leading, spacing: 8) {
                 Text(definition.title).font(.system(size: 18, weight: .bold)).foregroundStyle(.white)
                 ProgressBar(value: Double(progress) / Double(definition.target))
-                Text("\(ChipFormat.string(progress)) / \(ChipFormat.string(definition.target)) · Belohnung \(ChipFormat.string(definition.rewardChips)) Chips + \(definition.rewardXP) XP")
+                Text("\(ChipFormat.string(progress)) / \(ChipFormat.string(definition.target)) · Belohnung \(ChipFormat.string(definition.rewardChips)) Chips")
                     .font(.system(size: 13)).foregroundStyle(Theme.textSecondary)
             }
             Spacer(minLength: 10)
@@ -172,7 +172,7 @@ struct AchievementsView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 22) {
                 SheetHeader(title: "ACHIEVEMENTS",
-                            subtitle: "\(model.profile.unlockedAchievements.count) von \(RewardTable.achievements.count) freigeschaltet")
+                            subtitle: "\(model.profile.unlockedAchievements.count) von \(RewardTable.achievements.count) freigeschaltet · reine Anzeige, ohne Einfluss auf das Spiel")
                 LazyVGrid(columns: [GridItem(.adaptive(minimum: 300), spacing: 16)], spacing: 16) {
                     ForEach(RewardTable.achievements) { def in
                         AchievementTile(definition: def,

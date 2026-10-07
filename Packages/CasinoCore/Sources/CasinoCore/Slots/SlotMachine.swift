@@ -37,6 +37,18 @@ public struct SlotMachineDefinition: Identifiable {
     public func symbol(_ id: String) -> SlotSymbol {
         symbols.first { $0.id == id }!
     }
+
+    /// Wahrscheinlichkeit, dass `symbolID` an einer beliebigen festen Position von Walze `reel` erscheint.
+    /// Ergibt sich direkt aus dem Walzenstreifen: Anzahl des Symbols / Streifenlänge.
+    public func probability(of symbolID: String, onReel reel: Int) -> Double {
+        let strip = reelStrips[reel]
+        return Double(strip.filter { $0 == symbolID }.count) / Double(strip.count)
+    }
+
+    /// Anzahl eines Symbols auf einer Walze.
+    public func count(of symbolID: String, onReel reel: Int) -> Int {
+        reelStrips[reel].filter { $0 == symbolID }.count
+    }
 }
 
 public struct LineWin: Equatable, Identifiable {

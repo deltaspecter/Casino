@@ -42,6 +42,7 @@ private struct PokerScreen: View {
     @Environment(AppModel.self) private var model
     @Bindable var viewModel: PokerViewModel
     @State private var showTutorial = false
+    @State private var showRules = false
 
     var body: some View {
         ZStack {
@@ -58,6 +59,7 @@ private struct PokerScreen: View {
                 GameTopBar(title: "TEXAS HOLD'EM",
                            subtitle: "No Limit · Blinds \(viewModel.selectedTable.smallBlind)/\(viewModel.selectedTable.bigBlind)",
                            onLeave: { viewModel.leave() },
+                           onRules: { showRules = true },
                            onHelp: { showTutorial = true })
                 Spacer()
                 bottomArea
@@ -77,6 +79,7 @@ private struct PokerScreen: View {
         }
         .onDisappear { viewModel.leave() }
         .sheet(isPresented: $showTutorial) { TutorialSheet(game: .poker) }
+        .sheet(isPresented: $showRules) { RulesSheet(game: .poker) }
     }
 
     // MARK: - Sitz-Overlays

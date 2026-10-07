@@ -167,29 +167,6 @@ struct ChipBalanceView: View {
     }
 }
 
-struct LevelBadge: View {
-    let level: Int
-    let progress: Double
-    var size: CGFloat = 52
-
-    var body: some View {
-        ZStack {
-            Circle().stroke(Color.white.opacity(0.1), lineWidth: 4)
-            Circle()
-                .trim(from: 0, to: progress)
-                .stroke(Theme.goldGradient, style: StrokeStyle(lineWidth: 4, lineCap: .round))
-                .rotationEffect(.degrees(-90))
-            VStack(spacing: -2) {
-                Text("LV").font(.system(size: size * 0.18, weight: .bold)).foregroundStyle(Theme.textSecondary)
-                Text("\(level)").font(.numeric(size * 0.36, weight: .black)).foregroundStyle(.white)
-            }
-        }
-        .frame(width: size, height: size)
-        .animation(.easeOut(duration: 0.6), value: progress)
-        .accessibilityLabel("Level \(level)")
-    }
-}
-
 /// Deutlicher Hinweis: Chips sind rein virtuell.
 struct NoCashValueNote: View {
     var compact = false
