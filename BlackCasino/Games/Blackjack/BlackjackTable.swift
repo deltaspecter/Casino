@@ -138,7 +138,7 @@ final class BlackjackTable {
         for (node, target) in moves {
             let action = SCNAction.move(to: target, duration: 0.35)
             action.timingMode = .easeInEaseOut
-            node.runAction(action)
+            node.play(action)
         }
         await sceneDelay(0.4)
         if let amount = betStacks[originalID]?.amount {

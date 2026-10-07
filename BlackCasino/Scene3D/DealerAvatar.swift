@@ -105,13 +105,13 @@ final class ImportedDealerRig: DealerRig {
     func reach(toward local: SCNVector3, rightHand: Bool) {
         // Ohne bekannte Skelett-Namen nur ein dezentes Vorbeugen
         let lean = SCNAction.sequence([.rotateBy(x: 0.06, y: 0, z: 0, duration: 0.2), .rotateBy(x: -0.06, y: 0, z: 0, duration: 0.25)])
-        root.runAction(lean)
+        root.play(lean)
     }
 
     func look(at local: SCNVector3) {
         guard let head else { return }
         let yaw = atan2(local.x, local.z) * 0.5
-        head.runAction(.rotateTo(x: CGFloat(head.eulerAngles.x), y: CGFloat(yaw), z: 0, duration: 0.3, usesShortestUnitArc: true))
+        head.play(.rotateTo(x: CGFloat(head.eulerAngles.x), y: CGFloat(yaw), z: 0, duration: 0.3, usesShortestUnitArc: true))
     }
 
     func react(_ reaction: DealerAvatar.Reaction) {
@@ -282,14 +282,14 @@ final class ProceduralDealerRig: DealerRig {
         inhale.timingMode = .easeInEaseOut
         let exhale = SCNAction.scale(to: 1.0, duration: 2.3)
         exhale.timingMode = .easeInEaseOut
-        root.runAction(.repeatForever(.sequence([inhale, exhale])), forKey: "breath")
+        root.play(.repeatForever(.sequence([inhale, exhale])), key: "breath")
 
         // Leichtes Kopfwiegen
         let swayA = SCNAction.rotateTo(x: 0.03, y: 0.06, z: 0.01, duration: 3.4, usesShortestUnitArc: true)
         swayA.timingMode = .easeInEaseOut
         let swayB = SCNAction.rotateTo(x: -0.01, y: -0.05, z: -0.01, duration: 3.8, usesShortestUnitArc: true)
         swayB.timingMode = .easeInEaseOut
-        headPivot.runAction(.repeatForever(.sequence([swayA, swayB])), forKey: "sway")
+        headPivot.play(.repeatForever(.sequence([swayA, swayB])), key: "sway")
 
         scheduleBlink()
     }
@@ -302,7 +302,7 @@ final class ProceduralDealerRig: DealerRig {
         let open = SCNAction.customAction(duration: 0.1) { node, t in
             node.scale.y = Float(0.1 + 0.9 * (t / 0.1))
         }
-        for eye in eyes { eye.runAction(.sequence([.wait(duration: wait), close, open])) }
+        for eye in eyes { eye.play(.sequence([.wait(duration: wait), close, open])) }
         Task { @MainActor [weak self] in
             try? await Task.sleep(for: .seconds(wait + 0.2))
             guard let self, self.root.parent != nil else { return }
@@ -319,10 +319,10 @@ final class ProceduralDealerRig: DealerRig {
         out.timingMode = .easeOut
         let back = SCNAction.rotateTo(x: -0.35, y: 0, z: CGFloat(side * 0.12), duration: 0.3, usesShortestUnitArc: true)
         back.timingMode = .easeInEaseOut
-        shoulder.runAction(.sequence([out, back]), forKey: "reach")
+        shoulder.play(.sequence([out, back]), key: "reach")
         let extend = SCNAction.rotateTo(x: -0.55, y: 0, z: 0, duration: 0.18, usesShortestUnitArc: true)
         let bend = SCNAction.rotateTo(x: -1.15, y: 0, z: 0, duration: 0.3, usesShortestUnitArc: true)
-        elbow.runAction(.sequence([extend, bend]), forKey: "reach")
+        elbow.play(.sequence([extend, bend]), key: "reach")
     }
 
     func look(at local: SCNVector3) {
@@ -334,7 +334,7 @@ final class ProceduralDealerRig: DealerRig {
         let hold = SCNAction.wait(duration: 0.9)
         let reset = SCNAction.rotateTo(x: 0.05, y: 0, z: 0, duration: 0.6, usesShortestUnitArc: true)
         reset.timingMode = .easeInEaseOut
-        headPivot.runAction(.sequence([turn, hold, reset]), forKey: "look")
+        headPivot.play(.sequence([turn, hold, reset]), key: "look")
         Task { @MainActor [weak self] in
             try? await Task.sleep(for: .seconds(1.8))
             guard let self, self.headPivot.action(forKey: "look") == nil else { return }
@@ -348,22 +348,22 @@ final class ProceduralDealerRig: DealerRig {
         swayA.timingMode = .easeInEaseOut
         let swayB = SCNAction.rotateTo(x: -0.01, y: -0.05, z: -0.01, duration: 3.8, usesShortestUnitArc: true)
         swayB.timingMode = .easeInEaseOut
-        headPivot.runAction(.repeatForever(.sequence([swayA, swayB])), forKey: "sway")
+        headPivot.play(.repeatForever(.sequence([swayA, swayB])), key: "sway")
     }
 
     func react(_ reaction: DealerAvatar.Reaction) {
         // Lächeln: Mund breiter, Augenbrauen leicht angehoben; Nicken bei Spielergewinn
         let widen = SCNAction.scale(to: reaction == .playerWon ? 1.35 : 1.15, duration: 0.2)
         let relax = SCNAction.scale(to: 1, duration: 0.5)
-        mouth.runAction(.sequence([widen, .wait(duration: 1.2), relax]))
+        mouth.play(.sequence([widen, .wait(duration: 1.2), relax]))
         for brow in brows {
-            brow.runAction(.sequence([.moveBy(x: 0, y: 0.004, z: 0, duration: 0.2), .wait(duration: 1.0),
+            brow.play(.sequence([.moveBy(x: 0, y: 0.004, z: 0, duration: 0.2), .wait(duration: 1.0),
                                       .moveBy(x: 0, y: -0.004, z: 0, duration: 0.4)]))
         }
         if reaction == .playerWon {
             let nodDown = SCNAction.rotateBy(x: 0.14, y: 0, z: 0, duration: 0.18)
             let nodUp = SCNAction.rotateBy(x: -0.14, y: 0, z: 0, duration: 0.22)
-            head.runAction(.sequence([nodDown, nodUp, nodDown, nodUp]))
+            head.play(.sequence([nodDown, nodUp, nodDown, nodUp]))
         }
     }
 }

@@ -2,6 +2,12 @@ import SceneKit
 import UIKit
 
 extension SCNNode {
+    /// Startet eine Aktion ohne darauf zu warten. (Vermeidet, dass in `async`-Kontexten
+    /// versehentlich die wartende `async`-Variante von `runAction` gewählt wird.)
+    func play(_ action: SCNAction, key: String? = nil) {
+        runAction(action, forKey: key, completionHandler: nil)
+    }
+
     /// Führt eine Aktion aus und wartet auf ihr Ende.
     /// Mit Sicherheits-Timeout, damit nichts hängen bleibt, falls die Szene pausiert.
     @MainActor

@@ -78,7 +78,7 @@ final class ChipStackNode: SCNNode {
             fall.timingMode = .easeIn
             let bounceUp = SCNAction.moveBy(x: 0, y: 0.0025, z: 0, duration: 0.05)
             let bounceDown = SCNAction.moveBy(x: 0, y: -0.0025, z: 0, duration: 0.05)
-            chip.runAction(.sequence([.wait(duration: Double(i) * 0.035), .fadeIn(duration: 0.02), fall, bounceUp, bounceDown]))
+            chip.play(.sequence([.wait(duration: Double(i) * 0.035), .fadeIn(duration: 0.02), fall, bounceUp, bounceDown]))
         }
         if !newChips.isEmpty {
             Haptics.chip()

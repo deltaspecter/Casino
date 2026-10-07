@@ -170,7 +170,7 @@ final class CasinoStage {
             node.position = SCNVector3(base.x + sin(t) * radius, base.y + sin(t * 2) * 0.03, base.z + cos(t) * radius * 0.3)
             node.look(at: target)
         }
-        cameraNode.runAction(.repeatForever(action))
+        cameraNode.play(.repeatForever(action))
     }
 }
 

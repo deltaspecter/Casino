@@ -101,11 +101,11 @@ final class PokerTable {
         let target = point(forSeat: seat, radius: 0.6, y: 0.004) + SCNVector3(0.09, 0, 0)
         if buttonDisc.opacity == 0 {
             buttonDisc.position = target
-            buttonDisc.runAction(.fadeIn(duration: 0.3))
+            buttonDisc.play(.fadeIn(duration: 0.3))
         } else {
             let move = SCNAction.move(to: target, duration: 0.45)
             move.timingMode = .easeInEaseOut
-            buttonDisc.runAction(move)
+            buttonDisc.play(move)
         }
     }
 
