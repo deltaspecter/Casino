@@ -12,9 +12,9 @@ public enum PokerStyle: String, Codable, CaseIterable {
 
     public var title: String {
         switch self {
-        case .rock: return "Fels"
-        case .shark: return "Hai"
-        case .maniac: return "Draufgänger"
+        case .rock: return "Vorsichtig"
+        case .shark: return "Ausgewogen"
+        case .maniac: return "Aggressiv"
         case .station: return "Calling Station"
         }
     }
@@ -36,7 +36,7 @@ public enum PokerStreet: Int, Comparable, Codable {
     }
 }
 
-public enum PokerAction: Equatable {
+public enum PokerAction: Equatable, Codable {
     case fold
     case check
     case call
@@ -62,7 +62,7 @@ public enum PokerActionKind: String, Codable, Equatable {
     }
 }
 
-public struct PokerActionRecord: Equatable {
+public struct PokerActionRecord: Equatable, Codable {
     public let kind: PokerActionKind
     /// Gesamteinsatz des Spielers in dieser Setzrunde nach der Aktion.
     public let streetTotal: Int
@@ -97,7 +97,7 @@ public struct PokerSeat: Identifiable, Equatable {
     public var canAct: Bool { isInHand && !isAllIn }
 }
 
-public struct PokerLegalActions: Equatable {
+public struct PokerLegalActions: Equatable, Codable {
     public let canCheck: Bool
     /// Betrag, der zum Mitgehen nachgelegt werden muss (begrenzt durch den Stack).
     public let callAmount: Int
@@ -111,7 +111,7 @@ public struct ShowdownEntry: Equatable {
     public let hand: PokerHandRank
 }
 
-public struct PotAward: Equatable {
+public struct PotAward: Equatable, Codable {
     public let seatID: Int
     public let amount: Int
     public let potIndex: Int

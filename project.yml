@@ -18,6 +18,9 @@ targets:
       - path: BlackCasino
     dependencies:
       - package: CasinoCore
+        product: CasinoCore
+      - package: CasinoCore
+        product: CasinoNet
     info:
       path: BlackCasino/Resources/Info.plist
       properties:
@@ -38,6 +41,11 @@ targets:
           - UIInterfaceOrientationPortrait
           - UIInterfaceOrientationPortraitUpsideDown
         ITSAppUsesNonExemptEncryption: false
+        # Adresse des BlackCasino-Servers (in den Einstellungen änderbar). Produktion: wss://…
+        BCServerURL: "ws://localhost:8080/ws"
+        NSLocalNetworkUsageDescription: "BlackCasino verbindet sich für Multiplayer mit einem Spielserver in deinem Netzwerk."
+        NSAppTransportSecurity:
+          NSAllowsLocalNetworking: true
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.blackcasino.app

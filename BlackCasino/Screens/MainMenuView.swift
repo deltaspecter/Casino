@@ -3,6 +3,8 @@ import CasinoCore
 
 struct MainMenuView: View {
     @Environment(AppModel.self) private var model
+    @Environment(ConnectivityMonitor.self) private var connectivity
+    @State private var showOfflineAlert = false
     @Binding var path: [Route]
     @Binding var sheet: MenuSheet?
 
@@ -14,9 +16,12 @@ struct MainMenuView: View {
             GeometryReader { geo in
                 let landscape = geo.size.width > geo.size.height
                 ScrollView(showsIndicators: false) {
-                    VStack(spacing: 28) {
+                    VStack(spacing: 24) {
                         header
-                        gameCards(landscape: landscape, height: landscape ? geo.size.height * 0.46 : 300)
+                        sectionLabel("PLAY", detail: connectivity.isOnline ? nil : "OFFLINE MODE – alle Spiele lokal verfügbar")
+                        gameCards(landscape: landscape, height: landscape ? geo.size.height * 0.40 : 280)
+                        sectionLabel("MULTIPLAYER", detail: connectivity.isOnline ? "Online-Chips · vom Server verwaltet" : "Benötigt eine Internetverbindung")
+                        multiplayerCards(landscape: landscape)
                         extras(landscape: landscape)
                         NoCashValueNote()
                             .padding(.top, 6)
@@ -36,9 +41,46 @@ struct MainMenuView: View {
             BlackCasinoLogo(size: 30, shimmer: true)
                 .fixedSize()
             Spacer()
+            ConnectionBadge(isOnline: connectivity.isOnline)
             ChipBalanceView(amount: model.chips)
             IconButton(systemName: "gearshape.fill") { sheet = .settings }
                 .accessibilityLabel("Einstellungen")
+        }
+    }
+
+    private func sectionLabel(_ title: String, detail: String?) -> some View {
+        HStack(alignment: .firstTextBaseline, spacing: 14) {
+            Text(title).font(.display(15, weight: .heavy)).tracking(3).foregroundStyle(Theme.gold)
+            if let detail {
+                Text(detail).font(.system(size: 13, weight: .medium)).foregroundStyle(Theme.textTertiary)
+            }
+            Spacer()
+        }
+    }
+
+    // MARK: - Multiplayer
+
+    private func multiplayerCards(landscape: Bool) -> some View {
+        let layout = landscape ? AnyLayout(HStackLayout(spacing: 18)) : AnyLayout(VStackLayout(spacing: 14))
+        return layout {
+            MultiplayerCard(icon: "person.2.fill", title: "MIT FREUNDEN", subtitle: "Raum erstellen oder per Code beitreten",
+                            enabled: connectivity.isOnline) { openMultiplayer(.friends) }
+            MultiplayerCard(icon: "shuffle", title: "RANDOM MATCH", subtitle: "Echte Spieler finden – oder faire Bots",
+                            enabled: connectivity.isOnline) { openMultiplayer(.randomMatch) }
+        }
+        .alert("Keine Verbindung", isPresented: $showOfflineAlert) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text("Für Multiplayer wird eine Internetverbindung benötigt.")
+        }
+    }
+
+    private func openMultiplayer(_ route: Route) {
+        if connectivity.isOnline {
+            path.append(route)
+        } else {
+            Haptics.warning()
+            showOfflineAlert = true
         }
     }
 
@@ -181,6 +223,43 @@ private struct GameCard: View {
             .background(RoundedRectangle(cornerRadius: 20).fill(Color.black.opacity(0.4)))
             .overlay(RoundedRectangle(cornerRadius: 20).strokeBorder(Theme.goldGradient, lineWidth: 2))
         }
+    }
+}
+
+private struct MultiplayerCard: View {
+    let icon: String
+    let title: String
+    let subtitle: String
+    let enabled: Bool
+    let action: () -> Void
+
+    var body: some View {
+        Button {
+            Haptics.tap()
+            action()
+        } label: {
+            HStack(spacing: 18) {
+                Image(systemName: icon)
+                    .font(.system(size: 26, weight: .bold))
+                    .foregroundStyle(enabled ? AnyShapeStyle(Theme.redGradient) : AnyShapeStyle(Theme.textTertiary))
+                    .frame(width: 60, height: 60)
+                    .background(Circle().fill(Theme.red.opacity(enabled ? 0.15 : 0.05)))
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(title).font(.display(20)).foregroundStyle(.white)
+                    Text(enabled ? subtitle : "Offline nicht verfügbar")
+                        .font(.system(size: 14)).foregroundStyle(Theme.textSecondary)
+                }
+                Spacer(minLength: 0)
+                Image(systemName: enabled ? "chevron.right.circle.fill" : "wifi.slash")
+                    .font(.system(size: 24)).foregroundStyle(enabled ? Theme.gold : Theme.textTertiary)
+            }
+            .padding(20)
+            .frame(maxWidth: .infinity)
+            .glassPanel(cornerRadius: 26)
+            .opacity(enabled ? 1 : 0.55)
+        }
+        .buttonStyle(PressableCardStyle())
+        .accessibilityLabel(title + (enabled ? "" : ", offline nicht verfügbar"))
     }
 }
 

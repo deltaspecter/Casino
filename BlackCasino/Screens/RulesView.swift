@@ -109,7 +109,7 @@ struct RulesSheet: View {
         SectionTitle(title: "KI-Gegner")
         RuleList(items: [
             "Die KI sieht nur ihre eigenen Karten, das Board, den Pot und die Einsätze.",
-            "Sie schätzt ihre Chancen durch Simulation mit unbekannten Karten. Ihr Spielstil (Fels, Hai, Draufgänger, Calling Station) beeinflusst nur ihre Entscheidungen – nie die Kartenverteilung."
+            "Sie schätzt ihre Chancen durch Simulation mit unbekannten Karten. Ihr Spielstil (vorsichtig, ausgewogen, aggressiv, Calling Station) beeinflusst nur ihre Entscheidungen – nie die Kartenverteilung."
         ])
     }
 }

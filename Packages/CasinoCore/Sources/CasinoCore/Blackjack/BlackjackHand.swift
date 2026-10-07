@@ -67,7 +67,7 @@ public enum HandOutcome: String, Codable, Equatable {
     }
 }
 
-public struct HandResult: Equatable {
+public struct HandResult: Equatable, Codable {
     public let handID: Int
     public let outcome: HandOutcome
     public let stake: Int

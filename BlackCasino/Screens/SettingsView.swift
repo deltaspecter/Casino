@@ -4,7 +4,10 @@ import CasinoCore
 /// Einstellungen sowie Hinweise zu Zufall, Fairness und virtuellen Chips.
 struct SettingsView: View {
     @Environment(AppModel.self) private var model
+    @Environment(OnlineService.self) private var online
+    @Environment(ConnectivityMonitor.self) private var connectivity
     @State private var name = ""
+    @State private var serverURL = ""
     @State private var confirmReset = false
 
     var body: some View {
@@ -19,7 +22,10 @@ struct SettingsView: View {
                     .textInputAutocapitalization(.words)
                     .autocorrectionDisabled()
                     .submitLabel(.done)
-                    .onSubmit { model.rename(name) }
+                    .onSubmit {
+                        model.rename(name)
+                        online.rename(model.profile.displayName)
+                    }
                     .padding(18)
                     .glassPanel(cornerRadius: 18)
 
@@ -37,6 +43,44 @@ struct SettingsView: View {
                 }
                 .tint(Theme.red)
                 .foregroundStyle(.white)
+                .glassPanel(cornerRadius: 22)
+
+                SectionTitle(title: "Online", subtitle: "Multiplayer nutzt eigene Online-Chips, die ausschließlich der Server verwaltet – ebenfalls ohne Geldwert.")
+                VStack(alignment: .leading, spacing: 14) {
+                    HStack {
+                        ConnectionBadge(isOnline: connectivity.isOnline)
+                        ServerStatusLine()
+                        Spacer()
+                    }
+                    if let account = online.account {
+                        HStack(spacing: 24) {
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("FREUNDESCODE").font(.system(size: 11, weight: .bold)).foregroundStyle(Theme.textTertiary)
+                                Text(account.player.friendCode).font(.system(size: 20, weight: .black, design: .monospaced)).foregroundStyle(Theme.goldLight)
+                            }
+                            OnlineChipsView(amount: account.onlineChips)
+                            if account.onlineChips < 100 {
+                                Button("Online-Startpaket") { online.claimRescue() }
+                                    .buttonStyle(.casino(.gold, size: .small))
+                            }
+                        }
+                    }
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text("SERVERADRESSE").font(.system(size: 11, weight: .bold)).foregroundStyle(Theme.textTertiary)
+                        TextField("ws://server:8080/ws", text: $serverURL)
+                            .font(.system(size: 15, design: .monospaced))
+                            .textInputAutocapitalization(.never)
+                            .autocorrectionDisabled()
+                            .keyboardType(.URL)
+                            .onSubmit { online.serverURL = serverURL }
+                            .padding(12)
+                            .background(RoundedRectangle(cornerRadius: 12).fill(Color.black.opacity(0.35)))
+                            .foregroundStyle(.white)
+                        Text("Nur ändern, wenn du einen eigenen BlackCasino-Server betreibst.")
+                            .font(.system(size: 12)).foregroundStyle(Theme.textTertiary)
+                    }
+                }
+                .padding(18)
                 .glassPanel(cornerRadius: 22)
 
                 SectionTitle(title: "Fairness & Zufall")
@@ -67,8 +111,15 @@ struct SettingsView: View {
             }
             .padding(32)
         }
-        .onAppear { name = model.profile.displayName }
-        .onDisappear { model.rename(name) }
+        .onAppear {
+            name = model.profile.displayName
+            serverURL = online.serverURL
+        }
+        .onDisappear {
+            model.rename(name)
+            online.rename(model.profile.displayName)
+            if serverURL != online.serverURL { online.serverURL = serverURL }
+        }
     }
 
     private func infoBlock(icon: String, text: String) -> some View {
