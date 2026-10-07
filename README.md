@@ -12,6 +12,7 @@
 | **Blackjack** | 3D-Tisch, virtueller Dealer, 1 Deck (vor jeder Runde neu gemischt), Hit / Stand / Double / Split (bis 4 Hände), S17, Blackjack 3:2 – vollständiges Regelwerk im Spiel unter „Rules“ |
 | **Poker** | No-Limit Texas Hold'em gegen 1–4 KI-Gegner mit vier Spielstilen, Side-Pots, Split-Pots, drei Tischstufen – Regeln und Handrangfolge unter „Rules“ |
 | **Slots** | 3 Automaten (Crimson Sevens, Midnight Gems, Dragon Fortune), 5×3 Walzen, 10 Gewinnlinien, Wild & Scatter – je Automat Regelwerk mit Gewinntabelle, Linien und Symbol-Wahrscheinlichkeiten |
+| **Multiplayer** | Online/Offline-Erkennung, private Räume mit Code (Blackjack 2–5, Poker 2–6 Spieler), Freunde mit Präsenz und Einladungen, Random Match mit Bot-Angebot, Reconnect – alles über einen autoritativen Server |
 | **Extras** | Startkapital 10.000 Chips, Daily Reward, Login-Serie, 3 optionale Tagesmissionen, 11 Achievements, Statistikseite, Einstellungen, einmalige Tutorial-Boni, Startpaket bei leerem Konto. **Kein XP- oder Level-System.** |
 
 ## Technologie – und warum
@@ -27,27 +28,73 @@
 ```
 BlackCasino/
 ├── project.yml                  XcodeGen-Projektdefinition
-├── Packages/CasinoCore/         Reine Spiellogik (Swift Package, 68 Unit-Tests)
-│   ├── Random/                  Zufallsquelle (CSPRNG) + Fisher-Yates
-│   ├── Cards/                   Karten, Deck, Schlitten (Shoe)
-│   ├── Blackjack/               Regel-Engine, Handbewertung
-│   ├── Poker/                   Hold'em-Engine, Handbewertung, faire KI
-│   ├── Slots/                   Automat, Katalog, exakte RTP-Berechnung
-│   ├── Progression/             Profil, Wallet, Statistik, Missionen, Erfolge
-│   └── Persistence/             JSON-Speicherung (atomar, mit Korruptions-Recovery)
+├── Packages/CasinoCore/         Swift Package (App + Server)
+│   ├── CasinoCore               Spiellogik: RNG, Karten, Blackjack-Tisch-Engine, Hold'em, Slots, Profil
+│   └── CasinoNet                Netzwerkprotokoll + geschwärzte Tisch-Snapshots (gemeinsam für App & Server)
+├── Server/                      Autoritativer Spielserver (Swift, Hummingbird 2, WebSocket)
+│   ├── BlackCasinoServerCore    GameServer-Actor, Konten, Räume, Matchmaking, Poker-/Blackjack-Sitzungen
+│   ├── BlackCasinoServer        Startprogramm (PORT, DATA_DIR)
+│   └── Dockerfile               Container-Build
 └── BlackCasino/                 iPad-App
-    ├── App/                     App-Einstieg, AppModel (Zustand, Chips, Speichern), Navigation
-    ├── Design/                  Design-System (Farben, Typografie, Buttons, Effekte, Haptik)
-    ├── Scene3D/                 SceneKit-Bühne, Tisch, Karten, Chips, Dealer, Texturen
-    ├── Screens/                 Laden, Start, Hauptmenü, Belohnungen, Statistik, Einstellungen, Rules, Tutorials
-    └── Games/
-        ├── Blackjack/           ViewModel, 3D-Tisch-Controller, Oberfläche
-        ├── Poker/               ViewModel (KI-Ablauf), 3D-Tisch-Controller, Oberfläche
-        └── Slots/               Lobby, Automat, Walzen-Animation, Gewinnplan
+    ├── App/                     App-Einstieg, AppModel, Navigation
+    ├── Design/                  Design-System
+    ├── Scene3D/                 SceneKit-Bühne, Tisch, Karten, Chips, Dealer
+    ├── Screens/                 Laden, Start, Menü, Belohnungen, Statistik, Einstellungen, Rules
+    ├── Games/                   Offline-Spiele (Blackjack, Poker gegen Bots, Slots)
+    └── Online/                  Verbindungsstatus, Online-Client, Multiplayer-Ansichten, Online-Tische
 ```
 
-Datenfluss pro Spiel: **Engine** (entscheidet nach Regeln) → **Events** → **ViewModel** (verbucht Chips, spielt Events ab) → **3D-Controller / SwiftUI** (zeigt nur an).
-Die Darstellung kann Ergebnisse nicht beeinflussen.
+**Gleiche Regeln online und offline:** Blackjack läuft immer über `BlackjackTableEngine` (offline mit einem Platz,
+online mit bis zu fünf), Poker immer über `HoldemEngine`. Nur die Netzwerkschicht unterscheidet sich.
+
+### Online-Architektur
+
+```
+iPad-App (OnlineService) ──WebSocket/JSON──▶ GameServer (Actor) ──▶ PokerSession / BlackjackSession ──▶ CasinoCore-Engines
+        ▲                                         │
+        └──────── TableSnapshot (pro Spieler geschwärzt) ◀┘        AccountStore (Konten, Online-Chips, Freunde)
+```
+
+* **Server-Autorität:** Deck, Kartenausgabe, Einsätze, Pot, Reihenfolge, Gewinner und Online-Kontostände existieren nur auf dem Server.
+  Clients senden Absichten (`TableActionRequest`), der Server prüft Zug, Legalität, Einsatzgrenzen und Guthaben.
+* **Keine Informationslecks:** Snapshots werden pro Empfänger erzeugt – fremde Hole Cards (vor dem Showdown), die verdeckte Dealer-Karte und das Deck werden nie übertragen.
+* **Synchronisation:** Jeder Zustand hat eine `version`; alle Spieler erhalten nach jeder Änderung denselben öffentlichen Zustand. Clients übernehmen nie ältere Versionen.
+* **Doppelte Aktionen:** Jede Aktion hat eine `actionID`; der Server verarbeitet jede ID genau einmal. Der Client sperrt Buttons, bis die Antwort da ist (`ActionGate`). Veraltete Stände (`stateVersion`) werden abgelehnt.
+* **Latenz:** Buttons reagieren sofort (Haptik, Sperre), der neue Zustand kommt vom Server.
+* **Reconnect:** Verbindungsabbruch → Overlay „Verbindung verloren – Versuche Verbindung wiederherzustellen …“, exponentielle Wiederholversuche, Aktionen gesperrt, keine lokalen Ergebnisse. Der Server hält den Platz 60 s; läuft die Bedenkzeit ab, gilt Stand (Blackjack) bzw. Check/Fold (Poker). Danach wird der Platz frei und der Stack dem Online-Konto gutgeschrieben.
+* **Matchmaking:** 1. freier Platz an einem öffentlichen Tisch mit echten Spielern, 2. wartender Spieler fürs gleiche Spiel, 3. nach 12 s „Kein Spieler gefunden. Mit Bots spielen?“ (JA / WARTEN).
+* **Bots:** Poker-Bots (vorsichtig, ausgewogen, aggressiv) entscheiden nur mit `PokerAIContext`; Blackjack-Bots mit eigener Hand + offener Dealer-Karte (Grundstrategie). Sie haben keinen Zugriff auf Deck oder RNG und sind im Spiel als „BOT“ gekennzeichnet.
+* **Online-Chips:** Getrennt vom lokalen Offline-Kontostand und ausschließlich serverseitig gespeichert/validiert. Dadurch gibt es keine Konflikte zwischen lokalem und Server-Zustand. Ebenfalls rein virtuell.
+* **Sicherheit:** Zugangstoken (256 Bit) in der iOS-Keychain, serverseitig nur als SHA-256-Hash gespeichert; Nachrichten max. 64 KB; Rate-Limit; Namen werden bereinigt.
+
+### Benötigte Backend-Komponenten
+
+| Komponente | Umsetzung im Repo | Für den Produktivbetrieb |
+|---|---|---|
+| Spielserver (WebSocket) | `Server/` – fertig, getestet | auf einem Host/Container betreiben (`Server/Dockerfile`) |
+| TLS (`wss://`) | – | Reverse Proxy (z. B. Caddy/nginx/Load Balancer) mit Zertifikat vor dem Server |
+| Persistenz (Konten, Online-Chips, Freunde) | JSON-Datei mit atomarem Schreiben (`DATA_DIR`) | für eine Instanz ausreichend; bei mehreren Instanzen `AccountStore` gegen eine Datenbank (z. B. PostgreSQL) tauschen |
+| Skalierung über mehrere Instanzen | – (eine Instanz hält alle Tische im Speicher) | Sticky Sessions oder Tisch-Sharding + gemeinsamer Speicher für Präsenz/Räume |
+| Monitoring | `GET /health` | an das Monitoring anbinden |
+
+Die Serveradresse der App steht in `Info.plist` (`BCServerURL`) und kann in den Einstellungen geändert werden.
+
+**Server lokal starten:**
+
+```bash
+cd Server
+swift run BlackCasinoServer          # lauscht auf ws://localhost:8080/ws
+# oder als Container:
+docker build -f Server/Dockerfile -t blackcasino-server . && docker run -p 8080:8080 blackcasino-server
+```
+
+Im iPad-Simulator funktioniert `ws://localhost:8080/ws` direkt; auf einem echten iPad in den Einstellungen die IP des Rechners eintragen (z. B. `ws://192.168.1.20:8080/ws`).
+
+### Offline-Modus
+
+Ohne Internet bleiben Blackjack (lokaler Dealer), Poker gegen lokale Bots, Slots, Statistik, Daily Reward, Missionen, Achievements, Einstellungen, Tutorials und Regeln voll nutzbar.
+Multiplayer-Kacheln zeigen „Offline nicht verfügbar“; ein Tipp darauf erklärt: „Für Multiplayer wird eine Internetverbindung benötigt.“
+Ein Wechsel zwischen Online und Offline verändert laufende Offline-Spiele nicht.
 
 ## Zufall & Fairness
 
@@ -61,13 +108,16 @@ Grundsatz: **RNG → Mischen bzw. Walzenstopp → Ausgabe → Spielregeln → Er
 * Die theoretische Auszahlungsquote wird exakt berechnet und im Spiel angezeigt (Crimson Sevens 95,1 %, Midnight Gems 94,2 %, Dragon Fortune 94,9 %).
 * Chips auf dem Tisch liegen auf einem Treuhand-Konto. Wird die App mitten in einer Runde beendet, wird die Runde storniert und der Einsatz beim nächsten Start zurückgebucht. Der Kontostand kann nicht negativ werden.
 
-### Tests (`Packages/CasinoCore/Tests`)
+### Tests (`Packages/CasinoCore/Tests`, `Server/Tests`)
 
 * **Blackjack:** Blackjack 3:2, Bust, Push, Dealer-Bust, Dealer-Blackjack, beide Blackjack, Soft 17, Soft-Hände, Double, Split, Split-Asse, Double nach Split, ungültige Aktionen, 20.000+ Zufallsrunden ohne doppelte Karten
 * **Poker:** alle Handkategorien inkl. Royal Flush, offizielle Rangfolge, Kicker, Split-Pot, Side-Pots, Fold ohne Showdown, Aktionsreihenfolge, Mindest-Raise, Big-Blind-Option, Chip-Erhaltung über 2.000 Hände
 * **Slots:** jede Gewinnkombination (3/4/5) aller Automaten, Wild-Ersatz, Scatter 0–5, keine Gewinne, Einsatzskalierung, niedriger Kontostand, exakte vs. simulierte RTP
 * **RNG:** gleichverteiltes Mischen (Chi²), keine Dubletten, Vielfalt, gleichverteilte Walzenstopps, Unabhängigkeit vom vorherigen Ergebnis, von Einsatz/Kontostand und von Missionen/Erfolgen/Daily Rewards
 * **Speicherung:** alte und unvollständige Spielstände, beschädigte Dateien, negative Werte
+* **Mehrplatz-Blackjack:** drei Spieler (Hit/Stand/Double) gegen einen Dealer, Unabhängigkeit der Plätze, keine doppelten Karten, Bot-Strategie
+* **Protokoll:** Kodierung aller Nachrichten, Raumcodes, Schutz vor Doppelaktionen, Reconnect-Grenzen
+* **Server:** Registrierung/Token-Login, Freunde & Präsenz, Räume (Code, Limits, Host-Rechte, Einladung), Matchmaking (Paarung, Bot-Angebot, Warten, Abbrechen), synchrone Poker-Hände ohne Kartenlecks, abgelehnte doppelte/veraltete/fremde Aktionen, Turn-Timeout, Blackjack-Abrechnung über das Server-Wallet, verdeckte Dealer-Karte, Reconnect innerhalb der Frist, Abbau nach Fristablauf ohne Chipverlust, Neustart mit Rückbuchung, Rate-Limit, echte WebSocket-Verbindung
 
 ## Bauen & Starten
 
@@ -88,7 +138,7 @@ cd Packages/CasinoCore
 swift test
 ```
 
-Die GitHub-Action `.github/workflows/ci.yml` führt die Logik-Tests auf Linux aus und baut die App für den iPad-Simulator.
+Die GitHub-Action `.github/workflows/ci.yml` führt die Logik- und Servertests auf Linux aus und baut die App für den iPad-Simulator.
 
 ## Der Dealer (3D-Figur)
 
