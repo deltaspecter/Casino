@@ -6,22 +6,29 @@ import type { GameHost } from '../app/host'
 import { Button, InfoItem, ResultPill, TableBar, TopBar, useNarrow } from '../ui/components'
 import { Icon, type IconName } from '../ui/icons'
 import { ChipFormat } from '../ui/format'
-import { CARD_UNIT_W, Dealer, Shoe, TableCard, TableChips, TablePlane, TableStage } from '../ui/table'
+import { CARD_UNIT_H, CARD_UNIT_W, DealerHand, Shoe, TableCard, TableChips, TablePlane, TableStage, reachPose, type HandPose } from '../ui/table'
 import { ChipSelector, RescueHint } from './shared'
 
 // ---------- Tisch-Geometrie (Koordinaten der Tischfläche) ----------
 
 const STAGE_W = 1000
-const STAGE_H = 700
-const PLANE_TOP = 238
-const PLANE_H = 462
-const SHOE = { x: 880, y: 70 }
-const DISCARD = { x: 118, y: 66 }
-const DEALER_TRAY = { x: 500, y: 26 }
-const DEALER_ROW_Y = 104
-const HAND_Y = 296
-const BET_Y = 414
-const PLAYER_EDGE_Y = 520
+const STAGE_H = 640
+// Nahsicht: Die Tischfläche reicht über den oberen Bildrand hinaus – man sieht nur die Hände des Dealers.
+const PLANE_TOP = -180
+const PLANE_H = 820
+const SHOE = { x: 862, y: 236 }
+const DISCARD = { x: 132, y: 226 }
+const DEALER_TRAY = { x: 500, y: 190 }
+const DEALER_ROW_Y = 326
+const HAND_Y = 520
+const BET_Y = 650
+const PLAYER_EDGE_Y = 800
+
+/** Schultern des Dealers (außerhalb des Bildes) und Ruheposition seiner Hände. */
+const BASE_L = { x: 300, y: -260 }
+const BASE_R = { x: 700, y: -260 }
+const REST_L = reachPose({ x: 392, y: 252 }, BASE_L)
+const REST_R = reachPose({ x: 640, y: 246 }, BASE_R)
 
 interface CardEntity {
   key: number
@@ -76,7 +83,9 @@ export class BlackjackViewModel extends Observable {
   holeHidden = false
   actions = new Set<BlackjackAction>()
   summary: { title: string; net: number } | null = null
-  dealerReaching = false
+  /** Hände des Dealers (links/rechts aus Spielersicht) – reine Darstellung. */
+  handL: HandPose = REST_L
+  handR: HandPose = REST_R
 
   // Darstellung
   cards: CardEntity[] = []
@@ -204,7 +213,8 @@ export class BlackjackViewModel extends Observable {
   private async resetTable() {
     this.stage = 'busy'
     this.summary = null
-    // Karten in den Ablagestapel
+    // Karten in den Ablagestapel – die linke Hand räumt ab
+    if (this.cards.length) void this.touch({ x: 300, y: HAND_Y - 60 }, 380)
     this.cards = this.cards.map((c, i) => ({ ...c, x: DISCARD.x + (i % 3), y: DISCARD.y - i * 0.4, rotate: 90, faceUp: false, z: 30 + i, from: undefined }))
     this.chips = this.chips.map((c) => ({ ...c, gone: true }))
     this.changed()
@@ -226,7 +236,7 @@ export class BlackjackViewModel extends Observable {
   // ---------- Positionen ----------
 
   private handCenterX(index: number, count: number): number {
-    const spacing = count >= 4 ? 228 : count === 3 ? 262 : 290
+    const spacing = count >= 4 ? 220 : count === 3 ? 256 : 290
     return STAGE_W / 2 + (index - (count - 1) / 2) * spacing
   }
 
@@ -236,7 +246,7 @@ export class BlackjackViewModel extends Observable {
     // Wie am echten Tisch: jede Karte leicht versetzt, damit alle Werte sichtbar bleiben.
     return {
       x: cx - 14 + cardIndex * 30,
-      y: HAND_Y - cardIndex * 22 + (rotated ? 10 : 0),
+      y: HAND_Y - cardIndex * 26 + (rotated ? 12 : 0),
       rotate: rotated ? 90 : 0,
       z: cardIndex + 1,
     }
@@ -248,7 +258,7 @@ export class BlackjackViewModel extends Observable {
   }
 
   private dealerPos(index: number) {
-    return { x: STAGE_W / 2 - 42 + index * (CARD_UNIT_W * 0.86), y: DEALER_ROW_Y, rotate: 0, z: index + 1 }
+    return { x: STAGE_W / 2 - 46 + index * (CARD_UNIT_W * 0.9), y: DEALER_ROW_Y, rotate: 0, z: index + 1 }
   }
 
   private relayout() {
@@ -298,10 +308,27 @@ export class BlackjackViewModel extends Observable {
 
   // ---------- Ereignisse abspielen ----------
 
-  private async reach() {
-    this.dealerReaching = true
+  /** Die rechte Hand (beim Schlitten) legt die Karte an ihren Platz und kehrt zurück. */
+  private deliver(target: { x: number; y: number }) {
+    // Weite Wege: Die Hand schiebt die Karte an, statt über den ganzen Tisch zu greifen.
+    const y = Math.min(target.y - CARD_UNIT_H / 2 + 12, 400)
+    const x = REST_R.x + (target.x + 6 - REST_R.x) * Math.min(1, (y - REST_R.y) / Math.max(1, target.y - CARD_UNIT_H / 2 + 12 - REST_R.y))
+    this.handR = reachPose({ x, y }, BASE_R)
     this.changed()
-    window.setTimeout(() => { this.dealerReaching = false; this.changed() }, 300 * this.pace)
+    window.setTimeout(() => {
+      if (this.disposed) return
+      this.handR = REST_R
+      this.changed()
+    }, 430 * this.pace)
+  }
+
+  /** Die linke Hand greift eine Karte (z. B. zum Aufdecken der Hole Card). */
+  private async touch(target: { x: number; y: number }, holdMs = 420) {
+    this.handL = reachPose({ x: target.x, y: target.y - CARD_UNIT_H / 2 + 8 }, BASE_L)
+    this.changed()
+    await this.wait(holdMs)
+    this.handL = REST_L
+    this.changed()
   }
 
   private async play(events: BlackjackEvent[]) {
@@ -321,7 +348,7 @@ export class BlackjackViewModel extends Observable {
           this.playerCardKeys.set(event.handID, keys)
           this.cards = [...this.cards, { key, card: event.card, faceUp: true, ...pos, from: SHOE }]
           this.hands = this.hands.map((h) => (h.id === event.handID ? { ...h, cards: [...h.cards, event.card] } : h))
-          this.reach()
+          this.deliver(pos)
           this.changed()
           await this.wait(560)
           break
@@ -334,7 +361,7 @@ export class BlackjackViewModel extends Observable {
           this.cards = [...this.cards, { key, card: event.card, faceUp: !event.faceDown, ...pos, from: SHOE }]
           this.dealerCards = [...this.dealerCards, event.card]
           if (event.faceDown) this.holeHidden = true
-          this.reach()
+          this.deliver(pos)
           this.changed()
           await this.wait(520)
           break
@@ -342,6 +369,8 @@ export class BlackjackViewModel extends Observable {
 
         case 'holeCardRevealed': {
           const key = this.dealerCardKeys[1]
+          void this.touch(this.dealerPos(1), 520)
+          await this.wait(260)
           this.cards = this.cards.map((c) => (c.key === key ? { ...c, faceUp: true, from: undefined } : c))
           this.holeHidden = false
           this.changed()
@@ -465,8 +494,7 @@ export function BlackjackTableView({ vm }: { vm: BlackjackViewModel }) {
   useObserve(vm)
   return (
     <TableStage width={STAGE_W} height={STAGE_H} padTop={70} focusWidth={880}>
-      <Dealer x={STAGE_W / 2} y={PLANE_TOP + 40} width={300} reaching={vm.dealerReaching} />
-      <TablePlane kind="bj" top={PLANE_TOP} height={PLANE_H} tilt={30} print={<BlackjackPrint />}>
+      <TablePlane kind="bj" top={PLANE_TOP} height={PLANE_H} tilt={34} print={<BlackjackPrint />}>
         <Shoe x={SHOE.x} y={SHOE.y - 6} />
         <BetSpots vm={vm} />
         {vm.chips.map((c) => (
@@ -479,6 +507,8 @@ export function BlackjackTableView({ vm }: { vm: BlackjackViewModel }) {
             x={c.x} y={c.y} rotate={c.rotate} z={c.z} from={c.from}
             highlight={isActiveCard(vm, c.key)} />
         ))}
+        <DealerHand pose={vm.handL} />
+        <DealerHand pose={vm.handR} mirrored />
       </TablePlane>
     </TableStage>
   )
@@ -493,13 +523,13 @@ function isActiveCard(vm: BlackjackViewModel, key: number): boolean {
 
 function BetSpots({ vm }: { vm: BlackjackViewModel }) {
   const count = Math.max(1, vm.hands.length)
-  const spacing = count >= 4 ? 228 : count === 3 ? 262 : 290
+  const spacing = count >= 4 ? 220 : count === 3 ? 256 : 290
   const spots = Array.from({ length: count }, (_, i) => STAGE_W / 2 + (i - (count - 1) / 2) * spacing)
   return (
     <>
       {spots.map((x, i) => (
         <div class={`bet-spot ${vm.hands[i]?.isActive ? 'active' : ''}`}
-          style={{ left: x - 46, top: BET_Y - 32, width: 92, height: 64, transition: 'left .35s ease' }} />
+          style={{ left: x - 50, top: BET_Y - 36, width: 100, height: 72, transition: 'left .35s ease' }} />
       ))}
     </>
   )
@@ -508,18 +538,19 @@ function BetSpots({ vm }: { vm: BlackjackViewModel }) {
 /** Aufdruck im Filz (wie bei echten Tischen, dezent). */
 function BlackjackPrint() {
   return (
-    <svg viewBox="0 0 948 436" width="100%" height="100%" preserveAspectRatio="none" style={{ position: 'absolute', inset: 0 }}>
+    <svg viewBox="0 0 948 794" width="100%" height="100%" preserveAspectRatio="none" style={{ position: 'absolute', inset: 0 }}>
       <defs>
-        <path id="bj-arc-1" d="M150 150 Q474 262 798 150" />
-        <path id="bj-arc-2" d="M200 178 Q474 282 748 178" />
+        <path id="bj-arc-1" d="M140 386 Q474 500 808 386" />
+        <path id="bj-arc-2" d="M196 414 Q474 520 752 414" />
       </defs>
-      <text fill="rgba(240,228,196,.5)" font-size="25" font-weight="700" letter-spacing="5" font-family="Georgia, serif">
+      <text fill="rgba(240,228,196,.5)" font-size="27" font-weight="700" letter-spacing="5" font-family="Georgia, serif">
         <textPath href="#bj-arc-1" startOffset="50%" text-anchor="middle">BLACKJACK PAYS 3 TO 2</textPath>
       </text>
-      <text fill="rgba(240,228,196,.36)" font-size="15" font-weight="600" letter-spacing="3" font-family="-apple-system, sans-serif">
+      <text fill="rgba(240,228,196,.36)" font-size="16" font-weight="600" letter-spacing="3" font-family="-apple-system, sans-serif">
         <textPath href="#bj-arc-2" startOffset="50%" text-anchor="middle">DEALER MUST STAND ON ALL 17s</textPath>
       </text>
-      <path d="M150 150 Q474 262 798 150" fill="none" stroke="rgba(240,228,196,.18)" stroke-width="1.5" transform="translate(0 12)" />
+      <path d="M140 386 Q474 500 808 386" fill="none" stroke="rgba(240,228,196,.18)" stroke-width="1.5" transform="translate(0 12)" />
+      <rect x="400" y="150" width="148" height="60" rx="8" fill="rgba(0,0,0,.28)" stroke="rgba(240,228,196,.14)" />
     </svg>
   )
 }

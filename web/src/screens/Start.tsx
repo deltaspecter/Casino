@@ -1,7 +1,7 @@
 import { useState } from 'preact/hooks'
 import { Button, Glass, Logo, NoCashValueNote } from '../ui/components'
 import { Icon } from '../ui/icons'
-import { ChipStack, Dealer, TableCard, TablePlane, TableStage } from '../ui/table'
+import { ChipStack, DealerHand, TableCard, TablePlane, TableStage, reachPose } from '../ui/table'
 import { isAppleTouchDevice, isStandalone } from '../ui/install'
 
 /** Startbildschirm: dunkler Spieltisch mit Blackjack-Hand und Chips, darüber Logo und „SPIELEN“. */
@@ -11,13 +11,14 @@ export function StartScreen({ onPlay }: { onPlay: () => void }) {
     <div class="screen" style={{ background: '#000' }}>
       <div style={{ position: 'absolute', inset: 0, display: 'flex', animation: 'fade-in 1.4s ease-out both' }}>
         <TableStage width={1000} height={640}>
-          <Dealer x={500} y={300} width={280} />
-          <TablePlane kind="bj" top={250} height={390} tilt={32}>
-            <TableCard card={{ rank: 14, suit: 'spades' }} x={470} y={170} rotate={-8} />
-            <TableCard card={{ rank: 13, suit: 'hearts' }} x={520} y={175} rotate={6} z={1} />
-            <div style={{ position: 'absolute', left: 640, top: 150 }}><ChipStack amount={6250} width={64} /></div>
-            <div style={{ position: 'absolute', left: 720, top: 175 }}><ChipStack amount={1500} width={64} /></div>
-            <div style={{ position: 'absolute', left: 300, top: 160 }}><ChipStack amount={525} width={64} /></div>
+          <TablePlane kind="bj" top={-180} height={820} tilt={34}>
+            <TableCard card={{ rank: 14, suit: 'spades' }} x={470} y={470} rotate={-8} />
+            <TableCard card={{ rank: 13, suit: 'hearts' }} x={520} y={476} rotate={6} z={1} />
+            <div style={{ position: 'absolute', left: 640, top: 430 }}><ChipStack amount={6250} width={66} /></div>
+            <div style={{ position: 'absolute', left: 724, top: 462 }}><ChipStack amount={1500} width={66} /></div>
+            <div style={{ position: 'absolute', left: 290, top: 452 }}><ChipStack amount={525} width={66} /></div>
+            <DealerHand pose={reachPose({ x: 404, y: 300 }, { x: 300, y: -260 })} />
+            <DealerHand pose={reachPose({ x: 610, y: 290 }, { x: 700, y: -260 })} mirrored />
           </TablePlane>
         </TableStage>
       </div>

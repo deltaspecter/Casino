@@ -314,88 +314,119 @@ export function TableChips({ amount, x, y, from, width = 56, z = 0 }: {
   )
 }
 
-// ---------- Dealer ----------
+// ---------- Dealer-Hände ----------
+
+/** Position einer Dealer-Hand auf der Tischfläche (Fingerspitze des Mittelfingers). */
+export interface HandPose {
+  x: number
+  y: number
+  rotate?: number
+}
+
+const HAND_W = 140
+/** Der Ärmel reicht weit nach oben aus dem Bild – er ist Teil der Grafik (kein Überlauf). */
+const SLEEVE_TOP = -560
+const HAND_H = 250 - SLEEVE_TOP
+/** Fingerspitze des Mittelfingers in SVG-Koordinaten (gemessen ab Oberkante des Ärmels). */
+const HAND_TIP = { x: 74, y: 226 - SLEEVE_TOP }
 
 /**
- * Gesichtslose, realistisch proportionierte Dealer-Figur (Weste, Hemd, dunkelrote Krawatte).
- * Bewusst ohne Gesichtszüge – keine Nachbildung einer realen Person.
+ * Eine Hand des Dealers aus der Nahsicht: dunkler Ärmel, weiße Manschette, Handrücken nach oben.
+ * Keine Figur und kein Gesicht – man sieht nur, was ein Spieler am Tisch tatsächlich sieht.
+ * `mirrored` = linke Hand (Daumen zeigt dann ebenfalls zur Tischmitte).
  */
-export function Dealer({ x, y, width = 300, reaching = false }: { x: number; y: number; width?: number; reaching?: boolean }) {
-  const h = width * 0.9
+export function DealerHand({ pose, mirrored = false, width = 120, z = 60 }: { pose: HandPose; mirrored?: boolean; width?: number; z?: number }) {
+  const s = width / HAND_W
+  const ax = (mirrored ? HAND_W - HAND_TIP.x : HAND_TIP.x) * s
+  const ay = HAND_TIP.y * s
   return (
-    <div class={`dealer ${reaching ? 'reach' : ''}`} style={{ left: x - width / 2, top: y - h, width, height: h }}>
-      <svg viewBox="0 0 300 270" width={width} height={h} style={{ overflow: 'visible' }}>
-        <defs>
-          <radialGradient id="dl-skin" cx=".42" cy=".35" r=".75">
-            <stop offset="0" stop-color="#c9b2a0" />
-            <stop offset=".6" stop-color="#9c8372" />
-            <stop offset="1" stop-color="#5e4b40" />
-          </radialGradient>
-          <linearGradient id="dl-hair" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0" stop-color="#2a2420" />
-            <stop offset="1" stop-color="#15110f" />
-          </linearGradient>
-          <linearGradient id="dl-shirt" x1="0" y1="0" x2="1" y2="0">
-            <stop offset="0" stop-color="#9d9a95" />
-            <stop offset=".45" stop-color="#ecebe7" />
-            <stop offset="1" stop-color="#8f8c87" />
-          </linearGradient>
-          <linearGradient id="dl-vest" x1="0" y1="0" x2="1" y2="0">
-            <stop offset="0" stop-color="#050506" />
-            <stop offset=".4" stop-color="#1d1d22" />
-            <stop offset=".6" stop-color="#1a1a1f" />
-            <stop offset="1" stop-color="#040405" />
-          </linearGradient>
-          <linearGradient id="dl-tie" x1="0" y1="0" x2="1" y2="0">
-            <stop offset="0" stop-color="#3d0610" />
-            <stop offset=".5" stop-color="#7a0f1d" />
-            <stop offset="1" stop-color="#3d0610" />
-          </linearGradient>
-          <linearGradient id="dl-sleeve" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0" stop-color="#d9d7d2" />
-            <stop offset="1" stop-color="#8c8984" />
-          </linearGradient>
-          <radialGradient id="dl-key" cx=".5" cy=".2" r=".9">
-            <stop offset="0" stop-color="#ffd9a8" stop-opacity=".18" />
-            <stop offset="1" stop-color="#000" stop-opacity="0" />
-          </radialGradient>
-        </defs>
-        <g class="body">
-          {/* Schultern & Oberkörper */}
-          <path d="M40 270 C40 205 58 168 104 150 L196 150 C242 168 260 205 260 270 Z" fill="url(#dl-shirt)" />
-          {/* Weste */}
-          <path d="M66 270 C66 214 78 180 112 160 L138 166 L150 230 L162 166 L188 160 C222 180 234 214 234 270 Z" fill="url(#dl-vest)" />
-          <path d="M150 230 L150 270" stroke="#000" stroke-opacity=".5" stroke-width="1.5" />
-          <circle cx="150" cy="242" r="2.4" fill="#8c7a55" />
-          <circle cx="150" cy="258" r="2.4" fill="#8c7a55" />
-          {/* Kragen & Krawatte */}
-          <path d="M126 146 L150 168 L174 146 L168 138 L150 150 L132 138 Z" fill="#f2f1ed" />
-          <path d="M144 158 L156 158 L159 168 L153 222 L150 228 L147 222 L141 168 Z" fill="url(#dl-tie)" />
-          <path d="M144 158 L156 158 L154 166 L146 166 Z" fill="#5a0a15" />
-          {/* Hals */}
-          <path d="M132 118 L168 118 L170 146 L150 152 L130 146 Z" fill="url(#dl-skin)" />
-          <path d="M132 136 C142 146 158 146 168 136 L168 146 L150 152 L132 146 Z" fill="#000" opacity=".22" />
-          {/* Linker Arm (ruhend) */}
-          <path d="M58 190 C44 214 46 246 62 268 L92 268 C84 240 84 214 92 196 Z" fill="url(#dl-sleeve)" />
-          {/* Rechter Arm (greift zum Schlitten) */}
-          <g class="arm-r">
-            <path d="M242 190 C256 214 254 246 238 268 L208 268 C216 240 216 214 208 196 Z" fill="url(#dl-sleeve)" />
-          </g>
-          {/* Kopf (gesichtslos, wie eine Schaufensterfigur) */}
-          <g class="head">
-            <ellipse cx="150" cy="82" rx="37" ry="46" fill="url(#dl-skin)" />
-            <ellipse cx="113" cy="86" rx="6" ry="11" fill="#8a7263" />
-            <ellipse cx="187" cy="86" rx="6" ry="11" fill="#8a7263" />
-            <path d="M112 78 C110 44 128 32 150 32 C174 32 192 44 188 78 C184 62 172 54 150 54 C128 54 116 62 112 78 Z" fill="url(#dl-hair)" />
-            <ellipse cx="139" cy="70" rx="12" ry="16" fill="#fff" opacity=".06" />
-          </g>
-        </g>
+    <div class="dealer-hand" style={{
+      width, height: HAND_H * s,
+      transformOrigin: `${ax}px ${ay}px`,
+      transform: `translate3d(${pose.x - ax}px, ${pose.y - ay}px, ${z}px) rotate(${pose.rotate ?? 0}deg)`,
+      zIndex: z,
+    }}>
+      <svg viewBox={`0 ${SLEEVE_TOP} ${HAND_W} ${HAND_H}`} width={width} height={HAND_H * s} style={{ display: 'block', overflow: 'visible', transform: mirrored ? 'scaleX(-1)' : undefined }} aria-hidden="true">
+        <use href="#dealer-hand" />
       </svg>
     </div>
   )
 }
 
-/** Kartenschlitten neben dem Dealer. */
+/**
+ * Pose, bei der die Fingerspitze auf `target` zeigt und der Arm zur Schulter (`base`) außerhalb des Bildes läuft.
+ */
+export function reachPose(target: { x: number; y: number }, base: { x: number; y: number }): HandPose {
+  const angle = (Math.atan2(target.x - base.x, target.y - base.y) * 180) / Math.PI
+  return { x: target.x, y: target.y, rotate: -angle }
+}
+
+/** Einmalige SVG-Definition der Hand (wird per <use> wiederverwendet). */
+export function DealerHandDefs() {
+  return (
+    <svg width="0" height="0" style={{ position: 'absolute' }} aria-hidden="true">
+      <defs>
+        <radialGradient id="dh-back" cx=".45" cy=".45" r=".7">
+          <stop offset="0" stop-color="#e2b89b" /><stop offset=".6" stop-color="#cf9d7e" /><stop offset="1" stop-color="#9c6b50" />
+        </radialGradient>
+        <linearGradient id="dh-finger" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0" stop-color="#9f6f54" /><stop offset=".4" stop-color="#dcb194" /><stop offset=".6" stop-color="#d6a98b" /><stop offset="1" stop-color="#996a50" />
+        </linearGradient>
+        <linearGradient id="dh-tip" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#000" stop-opacity="0" /><stop offset=".75" stop-color="#000" stop-opacity="0" /><stop offset="1" stop-color="#5a2e1c" stop-opacity=".25" />
+        </linearGradient>
+        <linearGradient id="dh-sleeve" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0" stop-color="#030304" /><stop offset=".5" stop-color="#26262c" /><stop offset="1" stop-color="#030304" />
+        </linearGradient>
+        <linearGradient id="dh-cuff" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0" stop-color="#a9a6a0" /><stop offset=".5" stop-color="#f7f6f2" /><stop offset="1" stop-color="#9e9b95" />
+        </linearGradient>
+        <filter id="dh-soft" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="6" /></filter>
+        <filter id="dh-blur"><feGaussianBlur stdDeviation="1.2" /></filter>
+        <g id="dealer-hand">
+          <path class="dh-shadow" d="M44 100 C60 96 96 96 104 104 L118 160 C122 196 104 236 80 238 C58 240 40 226 38 192 Z" fill="#000" opacity=".5" filter="url(#dh-soft)" transform="translate(10 12)" />
+          <path d="M20 -560 L120 -560 L106 74 L34 74 Z" fill="url(#dh-sleeve)" />
+          <path d="M62 -560 L58 74" stroke="#000" stroke-opacity=".5" stroke-width="1" />
+          <path d="M33 68 L107 68 L104 92 L36 92 Z" fill="url(#dh-cuff)" />
+          <path d="M36 91 L104 91" stroke="#6f6c67" stroke-width="1.2" />
+          <circle cx="93" cy="80" r="3.6" fill="#caa65e" stroke="#6e5427" stroke-width=".8" />
+          <path d="M92 116 C104 120 114 132 118 148 C121 160 119 170 113 172 C107 174 103 168 101 160 C98 148 94 140 88 134 Z" fill="url(#dh-finger)" />
+          <path d="M106 160 C107 167 115 168 116 162 C117 157 107 154 106 160 Z" fill="#e9c6b2" opacity=".7" />
+          <path d="M46 156 C43 174 42 194 44 206 C45 214 55 215 57 207 C59 194 59 176 59 160 Z" fill="url(#dh-finger)" />
+          <path d="M59 160 C58 182 58 206 60 220 C61 229 72 229 73 220 C75 204 74 182 73 162 Z" fill="url(#dh-finger)" />
+          <path d="M73 162 C73 184 74 206 76 218 C77 226 88 226 89 217 C90 202 89 182 87 162 Z" fill="url(#dh-finger)" />
+          <path d="M87 160 C88 176 89 192 91 201 C92 208 101 207 101 199 C102 186 100 172 98 158 Z" fill="url(#dh-finger)" />
+          <g fill="url(#dh-tip)">
+            <path d="M46 156 C43 174 42 194 44 206 C45 214 55 215 57 207 C59 194 59 176 59 160 Z" />
+            <path d="M59 160 C58 182 58 206 60 220 C61 229 72 229 73 220 C75 204 74 182 73 162 Z" />
+            <path d="M73 162 C73 184 74 206 76 218 C77 226 88 226 89 217 C90 202 89 182 87 162 Z" />
+            <path d="M87 160 C88 176 89 192 91 201 C92 208 101 207 101 199 C102 186 100 172 98 158 Z" />
+          </g>
+          <path d="M42 90 C40 108 40 126 42 142 C43 152 45 160 50 166 C62 170 86 170 98 164 C102 154 102 140 100 124 C99 110 98 98 98 90 Z" fill="url(#dh-back)" />
+          <g fill="#f1cfb8" opacity=".55" filter="url(#dh-blur)">
+            <ellipse cx="52" cy="160" rx="5" ry="3.2" /><ellipse cx="66" cy="163" rx="5.5" ry="3.4" />
+            <ellipse cx="80" cy="163" rx="5.5" ry="3.4" /><ellipse cx="93" cy="158" rx="4.6" ry="3" />
+          </g>
+          <g stroke="#7d5240" stroke-opacity=".32" stroke-width="1" fill="none" stroke-linecap="round">
+            <path d="M47 182 Q51 180 56 182" /><path d="M61 188 Q66 186 71 188" /><path d="M76 186 Q81 184 86 186" /><path d="M89 180 Q93 178 98 180" />
+          </g>
+          <g fill="#e9c6b2" opacity=".75">
+            <path d="M47 203 C47 210 55 210 55 203 C55 199 47 199 47 203 Z" />
+            <path d="M62 216 C62 223 71 223 71 216 C71 211 62 211 62 216 Z" />
+            <path d="M78 214 C78 220 87 220 87 214 C87 209 78 209 78 214 Z" />
+            <path d="M92 197 C92 203 100 203 100 197 C100 193 92 193 92 197 Z" />
+          </g>
+          <g stroke="#f5dccb" stroke-opacity=".18" stroke-width="2.4" fill="none" stroke-linecap="round" filter="url(#dh-blur)">
+            <path d="M62 104 Q57 132 53 156" /><path d="M69 104 Q67 134 66 158" /><path d="M76 104 Q78 134 80 158" /><path d="M83 106 Q88 132 92 154" />
+          </g>
+          <path d="M42 92 L98 92 L98 100 C80 104 60 104 42 100 Z" fill="#000" opacity=".25" filter="url(#dh-blur)" />
+        </g>
+      </defs>
+    </svg>
+  )
+}
+
+/** Kartenschlitten (Shoe) beim Dealer. */
 export function Shoe({ x, y, width = 92 }: { x: number; y: number; width?: number }) {
   return <div class="shoe" style={{ left: x - width / 2, top: y - width * 0.35, width, height: width * 0.7, transform: 'rotate(-14deg)' }} />
 }

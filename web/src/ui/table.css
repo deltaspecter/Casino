@@ -223,48 +223,14 @@
   will-change: transform;
 }
 
-/* Dealer */
-.dealer {
+/* Dealer-Hände */
+.dealer-hand {
   position: absolute;
+  left: 0;
+  top: 0;
   pointer-events: none;
-}
-.dealer .body {
-  transform-origin: 50% 100%;
-  animation: breathe 4.6s ease-in-out infinite;
-}
-.dealer .head {
-  transform-origin: 50% 90%;
-  transform-box: fill-box;
-  animation: head-sway 11s ease-in-out infinite;
-}
-.dealer.reach .arm-r {
-  transform: rotate(-16deg) translate(6px, -10px);
-}
-.dealer .arm-r {
-  transform-origin: 72% 40%;
-  transform-box: view-box;
-  transition: transform 0.35s ease-out;
-}
-@keyframes breathe {
-  0%,
-  100% {
-    transform: scale(1, 1);
-  }
-  50% {
-    transform: scale(1.006, 1.012);
-  }
-}
-@keyframes head-sway {
-  0%,
-  100% {
-    transform: rotate(0deg) translateX(0);
-  }
-  30% {
-    transform: rotate(-1.6deg) translateX(-1px);
-  }
-  65% {
-    transform: rotate(1.2deg) translateX(1px);
-  }
+  will-change: transform;
+  transition: transform 0.42s cubic-bezier(0.3, 0.7, 0.25, 1);
 }
 
 /* Namensschilder (Poker) */
@@ -333,7 +299,4 @@
   white-space: nowrap;
 }
 
-.reduced-motion .dealer .body,
-.reduced-motion .dealer .head {
-  animation: none;
-}
+

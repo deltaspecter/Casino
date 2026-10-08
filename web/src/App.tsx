@@ -12,6 +12,7 @@ import { BlackjackScreen, BlackjackViewModel } from './games/blackjack'
 import { PokerScreen } from './games/poker'
 import { SlotMachineScreen, SlotsLobby, computeSlotReports } from './games/slots'
 import { Sheet } from './ui/components'
+import { DealerHandDefs } from './ui/table'
 import { Icon, type IconName } from './ui/icons'
 import { RewardTable } from './core/progression'
 
@@ -106,6 +107,7 @@ export function App() {
 
   return (
     <>
+      <DealerHandDefs />
       <div key={model.phase === 'lobby' ? model.route.name : model.phase} class="screen" style={{ animation: 'fade-in .45s ease-out' }}>
         {content}
       </div>

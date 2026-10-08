@@ -9,23 +9,28 @@ import { Observable, sleep, useObserve } from '../app/observable'
 import type { GameHost } from '../app/host'
 import { Button, Glass, InfoItem, NoCashValueNote, TableBar, TopBar, useNarrow } from '../ui/components'
 import { ChipFormat } from '../ui/format'
-import { Dealer, TableCard, TableChips, TablePlane, TableStage } from '../ui/table'
+import { CARD_UNIT_H, DealerHand, TableCard, TableChips, TablePlane, TableStage, reachPose, type HandPose } from '../ui/table'
 import { RescueHint } from './shared'
 
 // ---------- Tisch-Geometrie ----------
 
 const STAGE_W = 1000
 const STAGE_H = 700
-const PLANE_TOP = 150
-const PLANE_H = 550
+// Nahsicht: Der Tisch reicht über den oberen Bildrand – vom Dealer sieht man nur die Hände.
+const PLANE_TOP = -40
+const PLANE_H = 740
 const CX = 500
-const CY = 262
+const CY = 356
 const RX = 452
-const RY = 236
-const DECK = { x: 640, y: 54 }
-const MUCK = { x: 360, y: 54 }
-const POT = { x: 500, y: 356 }
-const COMMUNITY_Y = 236
+const RY = 318
+const DECK = { x: 592, y: 118 }
+const MUCK = { x: 404, y: 118 }
+const POT = { x: 500, y: 478 }
+const COMMUNITY_Y = 322
+const BASE_L = { x: 330, y: -320 }
+const BASE_R = { x: 670, y: -320 }
+const REST_L = reachPose({ x: 428, y: 128 }, BASE_L)
+const REST_R = reachPose({ x: 566, y: 124 }, BASE_R)
 
 function pick<T>(items: readonly T[], random: RandomSource): T | undefined {
   return items.length ? items[random.uniform(items.length)] : undefined
@@ -98,6 +103,9 @@ export class PokerViewModel extends Observable {
   humanWonLastHand = false
   raiseTarget = 0
   winners = new Set<number>()
+  /** Hände des Dealers – reine Darstellung. */
+  handL: HandPose = REST_L
+  handR: HandPose = REST_R
 
   // Darstellung
   cards: CardEntity[] = []
@@ -427,6 +435,27 @@ export class PokerViewModel extends Observable {
     return { x: p.x - 16 + index * 32, y: p.y, rotate: index === 0 ? -7 : 6, width: 68 }
   }
 
+  /** Die rechte Hand schiebt eine Karte vom Deck in Richtung Ziel (bei weiten Wegen nur ein Stück). */
+  private flick(target: { x: number; y: number }, reach = 1, holdMs = 300) {
+    const t = { x: DECK.x + (target.x - DECK.x) * reach, y: DECK.y + (target.y - CARD_UNIT_H / 2 + 10 - DECK.y) * reach }
+    this.handR = reachPose(t, BASE_R)
+    this.changed()
+    window.setTimeout(() => {
+      if (this.disposed) return
+      this.handR = REST_R
+      this.changed()
+    }, holdMs * (this.host.reducedMotion ? 0.55 : 1))
+  }
+
+  /** Die linke Hand schiebt Chips (Pot) in Richtung Gewinner. */
+  private async push(target: { x: number; y: number }, reach = 0.55) {
+    this.handL = reachPose({ x: POT.x + (target.x - POT.x) * reach, y: POT.y - 30 + (target.y - POT.y) * reach }, BASE_L)
+    this.changed()
+    await this.wait(420)
+    this.handL = REST_L
+    this.changed()
+  }
+
   private async play(events: PokerEvent[]) {
     const engine = this.engine
     if (!engine) return
@@ -462,6 +491,7 @@ export class PokerViewModel extends Observable {
                 key: `h${deal.seatID}-${round}`, card: deal.cards[round], faceUp: isHuman,
                 x: pos.x, y: pos.y, rotate: pos.rotate, width: pos.width, z: round + 1, from: DECK,
               }]
+              this.flick(pos, 0.3, 150)
               this.changed()
               await this.wait(isHuman ? 300 : 190)
             }
@@ -506,6 +536,7 @@ export class PokerViewModel extends Observable {
               key: `c${index}`, card: event.cards[k], faceUp: true,
               x: CX + (index - 2) * 104, y: COMMUNITY_Y, rotate: 0, width: 92, z: 1, from: DECK,
             }]
+            this.flick({ x: CX + (index - 2) * 104, y: COMMUNITY_Y }, 1, 240)
             this.community = [...this.community, event.cards[k]]
             this.changed()
             await this.wait(260)
@@ -535,6 +566,7 @@ export class PokerViewModel extends Observable {
           this.chips = [...this.chips, { key, amount: event.award.amount, x: target.x, y: target.y, from: POT, gone: false }]
           const remaining = events.slice(i + 1).some((e) => e.type === 'potAwarded')
           this.changed()
+          void this.push(target)
           await this.wait(620)
           this.chips = this.chips.map((c) => (c.key === key ? { ...c, gone: true } : c))
           if (!remaining) this.pot = 0
@@ -561,7 +593,6 @@ function PokerTableView({ vm }: { vm: PokerViewModel }) {
   const showdownBest = (seatID: number) => vm.winners.has(seatID)
   return (
     <TableStage width={STAGE_W} height={STAGE_H} padTop={70}>
-      <Dealer x={STAGE_W / 2} y={PLANE_TOP + 66} width={250} />
       <TablePlane kind="pk" top={PLANE_TOP} height={PLANE_H} tilt={34} print={<PokerPrint />}>
         <div class="shoe" style={{ left: DECK.x - 40, top: DECK.y - 24, width: 80, height: 50, transform: 'rotate(-8deg)' }} />
         {vm.pot > 0 && <div class="felt-label" style={{ left: POT.x, top: POT.y + 44 }}>Pot {ChipFormat.string(vm.pot)}</div>}
@@ -594,6 +625,8 @@ function PokerTableView({ vm }: { vm: PokerViewModel }) {
           const p = vm.seatPoint(PokerViewModel.humanSeatID, 0.8)
           return <div class="seat-plate" style={{ left: p.x + 150, top: p.y, minWidth: 0, padding: 0, width: 38, height: 38, borderRadius: 19, background: 'linear-gradient(#fff,#ddd)', color: '#111', fontWeight: 900, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>D</div>
         })()}
+        <DealerHand pose={vm.handL} width={110} />
+        <DealerHand pose={vm.handR} width={110} mirrored />
       </TablePlane>
     </TableStage>
   )
@@ -601,9 +634,9 @@ function PokerTableView({ vm }: { vm: PokerViewModel }) {
 
 function PokerPrint() {
   return (
-    <svg viewBox="0 0 940 490" width="100%" height="100%" preserveAspectRatio="none" style={{ position: 'absolute', inset: 0 }}>
-      <rect x="40" y="40" width="860" height="410" rx="205" fill="none" stroke="rgba(240,228,196,.16)" stroke-width="2" />
-      <text x="470" y="330" text-anchor="middle" fill="rgba(240,228,196,.22)" font-size="22" letter-spacing="8" font-family="Georgia, serif" font-weight="700">BLACKCASINO</text>
+    <svg viewBox="0 0 940 680" width="100%" height="100%" preserveAspectRatio="none" style={{ position: 'absolute', inset: 0 }}>
+      <rect x="40" y="40" width="860" height="600" rx="300" fill="none" stroke="rgba(240,228,196,.16)" stroke-width="2" />
+      <text x="470" y="470" text-anchor="middle" fill="rgba(240,228,196,.22)" font-size="22" letter-spacing="8" font-family="Georgia, serif" font-weight="700">BLACKCASINO</text>
     </svg>
   )
 }

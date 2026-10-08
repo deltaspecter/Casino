@@ -12,7 +12,7 @@ import { makeCard, type Suit } from '../core/cards'
 import { Button, ChipIcon, ConnectionBadge, Glass, IconButton, InfoItem, ResultPill, SectionTitle, TableBar, TopBar, useNarrow } from '../ui/components'
 import { Icon } from '../ui/icons'
 import { ChipFormat } from '../ui/format'
-import { Dealer, Shoe, TableCard, TableChips, TablePlane, TableStage, type CardFace } from '../ui/table'
+import { DealerHand, Shoe, TableCard, TableChips, TablePlane, TableStage, reachPose, type CardFace } from '../ui/table'
 import { serverStatusText } from './Sheets'
 
 const SUITS: Suit[] = ['clubs', 'diamonds', 'hearts', 'spades']
@@ -376,7 +376,12 @@ export function OnlineTable({ online, onRules, onExit }: { online: OnlineService
 }
 
 const seatName = (table: TableSnapshot, seatID: number) => table.seats.find((s) => s.seatID === seatID)
-const SHOE = { x: 880, y: 70 }
+const SHOE = { x: 862, y: 236 }
+// Ruhende Dealer-Hände (Nahsicht wie offline)
+const BJ_HAND_L = reachPose({ x: 392, y: 252 }, { x: 300, y: -260 })
+const BJ_HAND_R = reachPose({ x: 640, y: 246 }, { x: 700, y: -260 })
+const PK_HAND_L = reachPose({ x: 428, y: 128 }, { x: 330, y: -320 })
+const PK_HAND_R = reachPose({ x: 566, y: 124 }, { x: 670, y: -320 })
 
 function Nameplate({ table, seatID, isMe, isTurn, detail, x, y }: {
   table: TableSnapshot; seatID: number; isMe: boolean; isTurn: boolean; detail?: string; x: number; y: number
@@ -399,7 +404,7 @@ function OnlineBlackjack({ online, table, bj, header }: { online: OnlineService;
   const mySeat = bj.seats.find((s) => s.seatID === table.yourSeatID)
   const n = Math.max(1, bj.seats.length)
   const seatX = (i: number) => 500 + (i - (n - 1) / 2) * Math.min(200, 820 / n)
-  const seatY = (i: number) => 300 + Math.abs(i - (n - 1) / 2) * -26
+  const seatY = (i: number) => 520 + Math.abs(i - (n - 1) / 2) * -30
   const visibleDealer = bj.dealerCards.filter((c): c is WireCard => c !== null)
   const dealerValue = visibleDealer.length ? HandValue.display(HandValue.of(toCore(visibleDealer))) : null
   const myStake = mySeat ? (mySeat.hands.length ? mySeat.hands.reduce((s, h) => s + h.bet, 0) : mySeat.pendingBet ?? 0) : 0
@@ -411,12 +416,11 @@ function OnlineBlackjack({ online, table, bj, header }: { online: OnlineService;
   return (
     <>
       <div style={{ position: 'relative', flex: 1, minHeight: 0, display: 'flex' }}>
-        <TableStage width={1000} height={700} padTop={70} focusWidth={880}>
-          <Dealer x={500} y={278} width={280} />
-          <TablePlane kind="bj" top={238} height={462} tilt={30}>
+        <TableStage width={1000} height={640} padTop={70} focusWidth={880}>
+          <TablePlane kind="bj" top={-180} height={820} tilt={34}>
             <Shoe x={SHOE.x} y={SHOE.y - 6} />
             {bj.dealerCards.map((c, i) => (
-              <TableCard key={`d${i}`} card={c ? face(c) : null} x={458 + i * 82} y={100} z={i + 1} from={SHOE} />
+              <TableCard key={`d${i}`} card={c ? face(c) : null} x={454 + i * 86} y={326} z={i + 1} from={SHOE} />
             ))}
             {bj.seats.map((seat, i) => {
               const isMe = seat.seatID === table.yourSeatID
@@ -433,12 +437,14 @@ function OnlineBlackjack({ online, table, bj, header }: { online: OnlineService;
                         x={hx - 10 + k * 22} y={cy - k * 16} z={k + 1} rotate={hand.isDoubled && k === 2 ? 90 : 0} from={SHOE} highlight={active && handCount > 1} />
                     ))
                   })}
-                  <TableChips amount={stake} x={cx} y={cy + 96} width={46} from={{ x: cx, y: 520 }} />
-                  <Nameplate table={table} seatID={seat.seatID} isMe={isMe} isTurn={current === seat.seatID} x={cx} y={cy + 150}
+                  <TableChips amount={stake} x={cx} y={cy + 118} width={50} from={{ x: cx, y: 800 }} />
+                  <Nameplate table={table} seatID={seat.seatID} isMe={isMe} isTurn={current === seat.seatID} x={cx} y={cy + 190}
                     detail={seat.hands.length === 1 ? (seat.hands[0].result ? handOutcomeTitle(seat.hands[0].result.outcome) : HandValue.display(HandValue.of(toCore(seat.hands[0].cards)))) : undefined} />
                 </div>
               )
             })}
+            <DealerHand pose={BJ_HAND_L} />
+            <DealerHand pose={BJ_HAND_R} mirrored />
           </TablePlane>
         </TableStage>
         {header}
@@ -493,7 +499,7 @@ function OnlinePoker({ online, table, poker, header }: { online: OnlineService; 
   const narrow = useNarrow(1000)
 
   // Sitzpositionen: du unten, die anderen gleichmäßig um den Tisch.
-  const CX = 500, CY = 262, RX = 452, RY = 236
+  const CX = 500, CY = 356, RX = 452, RY = 318
   const point = (angle: number, r = 1) => ({ x: CX + Math.cos((angle * Math.PI) / 180) * RX * r, y: CY + Math.sin((angle * Math.PI) / 180) * RY * r })
   const angleFor = (i: number) => 140 + ((i + 1) * 260) / (others.length + 1)
   const myHand = me?.holeCards && poker.community.length >= 3 && !me.hasFolded
@@ -519,14 +525,14 @@ function OnlinePoker({ online, table, poker, header }: { online: OnlineService; 
     <>
       <div style={{ position: 'relative', flex: 1, minHeight: 0, display: 'flex' }}>
         <TableStage width={1000} height={700} padTop={70}>
-          <TablePlane kind="pk" top={150} height={550} tilt={34}>
+          <TablePlane kind="pk" top={-40} height={740} tilt={34}>
             {[0, 1, 2, 3, 4].map((i) => (
-              <div style={{ position: 'absolute', left: 500 + (i - 2) * 104 - 46, top: 236 - 64, width: 92, height: 129, borderRadius: 7, border: '1.5px solid rgba(255,255,255,.12)' }} />
+              <div style={{ position: 'absolute', left: 500 + (i - 2) * 104 - 46, top: 322 - 64, width: 92, height: 129, borderRadius: 7, border: '1.5px solid rgba(255,255,255,.12)' }} />
             ))}
-            {poker.community.map((c, i) => <TableCard key={`c${i}`} card={face(c)} x={500 + (i - 2) * 104} y={236} width={92} z={1} from={{ x: 640, y: 54 }} />)}
+            {poker.community.map((c, i) => <TableCard key={`c${i}`} card={face(c)} x={500 + (i - 2) * 104} y={322} width={92} z={1} from={{ x: 592, y: 118 }} />)}
             {poker.pot > 0 && <>
-              <TableChips amount={poker.pot} x={500} y={356} width={52} />
-              <div class="felt-label" style={{ left: 500, top: 400 }}>Pot {ChipFormat.string(poker.pot)}</div>
+              <TableChips amount={poker.pot} x={500} y={478} width={52} />
+              <div class="felt-label" style={{ left: 500, top: 522 }}>Pot {ChipFormat.string(poker.pot)}</div>
             </>}
             {others.map((p, i) => {
               const a = angleFor(i)
@@ -538,7 +544,7 @@ function OnlinePoker({ online, table, poker, header }: { online: OnlineService; 
                 <div key={p.seatID} style={{ opacity: faded ? 0.5 : 1, transition: 'opacity .3s' }}>
                   {p.holeCards
                     ? p.holeCards.map((c, k) => <TableCard key={`o${p.seatID}-${poker.handNumber}-${k}`} card={face(c)} width={68} x={cards.x - 16 + k * 32} y={cards.y} rotate={k ? 6 : -7} z={k + 1} />)
-                    : p.hasCards && [0, 1].map((k) => <TableCard key={`o${p.seatID}-${poker.handNumber}-${k}`} card={null} width={68} x={cards.x - 16 + k * 32} y={cards.y} rotate={k ? 6 : -7} z={k + 1} from={{ x: 640, y: 54 }} />)}
+                    : p.hasCards && [0, 1].map((k) => <TableCard key={`o${p.seatID}-${poker.handNumber}-${k}`} card={null} width={68} x={cards.x - 16 + k * 32} y={cards.y} rotate={k ? 6 : -7} z={k + 1} from={{ x: 592, y: 118 }} />)}
                   {p.streetBet > 0 && <TableChips amount={p.streetBet} x={bet.x} y={bet.y} width={44} />}
                   <Nameplate table={table} seatID={p.seatID} isMe={false} isTurn={poker.currentSeatID === p.seatID} detail={detail(p)} x={plate.x} y={plate.y} />
                 </div>
@@ -550,7 +556,7 @@ function OnlinePoker({ online, table, poker, header }: { online: OnlineService; 
               return (
                 <div style={{ opacity: me.hasFolded ? 0.5 : 1 }}>
                   {(me.holeCards ?? []).map((c, k) => (
-                    <TableCard key={`me-${poker.handNumber}-${k}`} card={face(c)} width={104} x={cards.x - 34 + k * 70} y={cards.y - 6} rotate={k ? 5 : -5} z={k + 1} from={{ x: 640, y: 54 }} />
+                    <TableCard key={`me-${poker.handNumber}-${k}`} card={face(c)} width={104} x={cards.x - 34 + k * 70} y={cards.y - 6} rotate={k ? 5 : -5} z={k + 1} from={{ x: 592, y: 118 }} />
                   ))}
                   {me.streetBet > 0 && <TableChips amount={me.streetBet} x={bet.x} y={bet.y} width={46} />}
                   {poker.buttonSeatID === me.seatID && (
@@ -559,6 +565,9 @@ function OnlinePoker({ online, table, poker, header }: { online: OnlineService; 
                 </div>
               )
             })()}
+            <DealerHand pose={PK_HAND_L} width={110} />
+            <DealerHand pose={PK_HAND_R} width={110} mirrored />
+            <div class="shoe" style={{ left: 552, top: 94, width: 80, height: 50, transform: 'rotate(-8deg)' }} />
           </TablePlane>
         </TableStage>
         {header}
