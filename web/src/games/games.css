@@ -1,0 +1,216 @@
+/* ---------- Gemeinsame Bedienelemente ---------- */
+.label-caps {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  color: var(--text-2);
+  margin-bottom: 6px;
+}
+.segmented {
+  display: inline-flex;
+  padding: 3px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.08);
+}
+.segmented button {
+  min-width: 56px;
+  height: 40px;
+  border-radius: 9px;
+  font-weight: 700;
+  font-size: 16px;
+  color: var(--text-2);
+  transition: background 0.2s, color 0.2s;
+}
+.segmented button.on {
+  background: var(--red);
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+}
+.slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 34px;
+  background: transparent;
+}
+.slider::-webkit-slider-runnable-track {
+  height: 6px;
+  border-radius: 3px;
+  background: linear-gradient(90deg, var(--red), rgba(255, 255, 255, 0.15));
+}
+.slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 28px;
+  height: 28px;
+  margin-top: -11px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.45);
+}
+.slider::-moz-range-track {
+  height: 6px;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.15);
+}
+.slider::-moz-range-thumb {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #fff;
+  border: none;
+}
+
+/* ---------- Slots ---------- */
+.cabinet {
+  padding: 22px;
+  border-radius: 34px;
+  background: linear-gradient(180deg, #141414, #050505);
+  border: 3px solid var(--glow);
+  box-shadow: 0 0 30px color-mix(in srgb, var(--glow) 45%, transparent), inset 0 0 0 1px rgba(255, 255, 255, 0.04);
+}
+.reel {
+  position: relative;
+  overflow: hidden;
+  border-radius: 16px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.015), rgba(255, 255, 255, 0.06));
+}
+.reel::after {
+  /* Wölbung der Walze */
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.55), transparent 28%, transparent 72%, rgba(0, 0, 0, 0.55));
+}
+.strip {
+  will-change: transform;
+}
+.strip.spinning {
+  filter: blur(1.2px);
+}
+.slot-symbol {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.01));
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  transition: transform 0.25s, box-shadow 0.25s, border-color 0.25s, opacity 0.25s;
+}
+.slot-symbol.hl {
+  border: 3px solid var(--sym-color);
+  box-shadow: 0 0 16px color-mix(in srgb, var(--sym-color) 70%, transparent);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.02));
+  transform: scale(1.05);
+}
+.slot-symbol.dim {
+  opacity: 0.55;
+}
+.slot-controls {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 22px;
+  padding: 18px;
+}
+.step-btn {
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  background: var(--surface-raised);
+  border: 1px solid var(--stroke);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.step-btn svg {
+  width: 20px;
+  height: 20px;
+}
+.step-btn:disabled {
+  opacity: 0.4;
+}
+.spin-btn {
+  width: 104px;
+  height: 104px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--red-gradient);
+  border: 3px solid rgba(247, 222, 158, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 22px rgba(219, 18, 41, 0.7);
+  transition: transform 0.2s cubic-bezier(0.3, 0.7, 0.4, 1.6), box-shadow 0.3s, opacity 0.2s;
+}
+.spin-btn:active:not(:disabled) {
+  transform: scale(0.92);
+}
+.spin-btn:disabled {
+  opacity: 0.55;
+}
+.spin-btn.busy {
+  box-shadow: 0 0 8px rgba(219, 18, 41, 0.7);
+  opacity: 1;
+}
+.spin-btn.busy svg {
+  transform: rotate(180deg);
+  transition: transform 0.4s;
+}
+.celebration {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.25);
+  pointer-events: none;
+  animation: fade-in 0.3s;
+  z-index: 30;
+}
+.machine-card {
+  text-align: left;
+  padding: 22px;
+  border-radius: 28px;
+  border: 1.5px solid;
+  transition: transform 0.25s;
+}
+.machine-card:active {
+  transform: scale(0.97);
+}
+.machine-card .preview {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  padding: 22px 0;
+  margin-bottom: 18px;
+  border-radius: 20px;
+  background: rgba(0, 0, 0, 0.35);
+}
+.prob-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 520px;
+}
+.prob-table th {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-3);
+  padding: 8px 4px;
+}
+.prob-table td {
+  text-align: center;
+  padding: 6px 4px;
+  border-top: 1px solid var(--stroke);
+}
+
+@media (max-width: 700px) {
+  .slot-controls {
+    flex-wrap: wrap;
+    gap: 14px;
+  }
+  .spin-btn {
+    width: 84px;
+    height: 84px;
+  }
+}

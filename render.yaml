@@ -1,0 +1,16 @@
+# Render-Blueprint für den BlackCasino-Multiplayer-Server (kostenloser Tarif).
+# Einrichtung: https://render.com/deploy?repo=https://github.com/deltaspecter/Casino
+services:
+  - type: web
+    name: blackcasino-server
+    runtime: docker
+    plan: free
+    dockerfilePath: ./Server/Dockerfile
+    dockerContext: .
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      # Im kostenlosen Tarif gibt es keinen dauerhaften Speicher – Online-Konten
+      # beginnen nach einem Neustart des Servers neu.
+      - key: DATA_DIR
+        value: /tmp/blackcasino

@@ -1,0 +1,20 @@
+{
+  "name": "BlackCasino",
+  "short_name": "BlackCasino",
+  "description": "Blackjack, Poker und Slots mit virtuellen Chips – reines Unterhaltungsspiel ohne Echtgeld.",
+  "id": "./",
+  "start_url": "./",
+  "scope": "./",
+  "display": "fullscreen",
+  "display_override": ["fullscreen", "standalone"],
+  "orientation": "any",
+  "background_color": "#09090c",
+  "theme_color": "#09090c",
+  "lang": "de",
+  "categories": ["games", "entertainment"],
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

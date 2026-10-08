@@ -119,6 +119,32 @@ Grundsatz: **RNG → Mischen bzw. Walzenstopp → Ausgabe → Spielregeln → Er
 * **Protokoll:** Kodierung aller Nachrichten, Raumcodes, Schutz vor Doppelaktionen, Reconnect-Grenzen
 * **Server:** Registrierung/Token-Login, Freunde & Präsenz, Räume (Code, Limits, Host-Rechte, Einladung), Matchmaking (Paarung, Bot-Angebot, Warten, Abbrechen), synchrone Poker-Hände ohne Kartenlecks, abgelehnte doppelte/veraltete/fremde Aktionen, Turn-Timeout, Blackjack-Abrechnung über das Server-Wallet, verdeckte Dealer-Karte, Reconnect innerhalb der Frist, Abbau nach Fristablauf ohne Chipverlust, Neustart mit Rückbuchung, Rate-Limit, echte WebSocket-Verbindung
 
+## Web-App fürs iPad (als App auf dem Home-Bildschirm) – kostenlos, ohne Mac
+
+**Link zum Spielen:** https://deltaspecter.github.io/Casino/
+
+BlackCasino gibt es zusätzlich als Web-App (`web/`). Sie läuft in Safari und lässt sich wie eine echte App installieren:
+
+1. Link in **Safari** auf dem iPad öffnen.
+2. **Teilen** (Quadrat mit Pfeil) → **„Zum Home-Bildschirm“** → „Hinzufügen“.
+3. BlackCasino startet ab dann über das eigene Symbol – im Vollbild, ohne Browserleiste und auch **offline**.
+
+Freunde bekommen denselben Link (im Menü: **„Freunde einladen“**) und installieren die App genauso.
+
+| | |
+|---|---|
+| Spiele | Blackjack, Texas Hold'em gegen KI, 3 Slot-Automaten – gleiche Regeln, Zahlen und Texte wie die iPad-App |
+| Spiellogik | `web/src/core` – 1:1-Übertragung von `CasinoCore` nach TypeScript (Web-Crypto-Zufall, Fisher-Yates, exakte RTP-Berechnung) |
+| Multiplayer | `web/src/net` – spricht exakt dasselbe Protokoll wie die iPad-App mit demselben Server |
+| Offline | Service Worker speichert alle Dateien; Spielstand liegt lokal im Gerät (`localStorage`) |
+| Tests | `cd web && npm test` (Spiellogik, Zufall, Protokoll, Online-Dienst) |
+
+**Veröffentlichung:** Der Workflow `.github/workflows/web.yml` testet, baut und veröffentlicht die Web-App bei jedem Push auf den Standard-Branch auf GitHub Pages. Einmalig nötig: *Settings → Pages → Source: „GitHub Actions“*.
+
+**Multiplayer-Server (optional):** Online-Spiele brauchen den Server aus `Server/`. Kostenlos geht das z. B. bei Render mit der Blueprint-Datei `render.yaml` (https://render.com/deploy?repo=https://github.com/deltaspecter/Casino). Danach die Adresse `wss://<name>.onrender.com/ws` als Repository-Variable `BLACKCASINO_SERVER_URL` eintragen (*Settings → Secrets and variables → Actions → Variables*) oder in der App unter *Settings → Serveradresse*. Im kostenlosen Tarif schläft der Server nach 15 Minuten ohne Nutzung ein (erster Verbindungsaufbau dauert dann bis zu einer Minute) und Online-Konten beginnen nach einem Neustart neu.
+
+**Lokal entwickeln:** `cd web && npm install && npm run dev`
+
 ## Auf dem iPad öffnen – ohne Mac (Swift Playgrounds)
 
 1. Auf dem iPad **Swift Playgrounds** aus dem App Store laden (kostenlos, iPadOS 17 oder neuer).

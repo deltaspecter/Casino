@@ -12,6 +12,8 @@ FROM ubuntu:24.04
 RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates libcurl4 && rm -rf /var/lib/apt/lists/*
 COPY --from=build /src/Server/.build/release/BlackCasinoServer /usr/local/bin/BlackCasinoServer
 ENV PORT=8080 DATA_DIR=/data
+# Datenverzeichnis muss für den unprivilegierten Benutzer beschreibbar sein
+RUN mkdir -p /data && chown nobody /data
 VOLUME /data
 EXPOSE 8080
 USER nobody
