@@ -32,127 +32,33 @@ enum TextureFactory {
 
     // MARK: - Karten
 
-    static let cardPixelSize = CGSize(width: 360, height: 504)
+    static let cardPixelSize = CardArt.size
 
     static func cardFace(rank: Rank, suit: Suit) -> UIImage {
         cached("card-\(rank.rawValue)-\(suit.rawValue)") {
-            let size = cardPixelSize
             let format = UIGraphicsImageRendererFormat()
             format.scale = 1
             format.opaque = false
-            return UIGraphicsImageRenderer(size: size, format: format).image { ctx in
-                let rect = CGRect(origin: .zero, size: size)
-                let cg = ctx.cgContext
-                // Papier mit leichter Struktur
-                UIColor(red: 0.985, green: 0.975, blue: 0.955, alpha: 1).setFill()
-                UIBezierPath(roundedRect: rect, cornerRadius: 26).fill()
-                cg.setStrokeColor(UIColor(white: 0.82, alpha: 1).cgColor)
-                cg.setLineWidth(3)
-                UIBezierPath(roundedRect: rect.insetBy(dx: 1.5, dy: 1.5), cornerRadius: 25).stroke()
-
-                let color = suit.isRed ? UIColor(red: 0.80, green: 0.05, blue: 0.12, alpha: 1)
-                                       : UIColor(red: 0.08, green: 0.08, blue: 0.10, alpha: 1)
-
-                // Ecken
-                let rankFont = UIFont.systemFont(ofSize: 74, weight: .heavy)
-                let suitFont = UIFont.systemFont(ofSize: 58, weight: .regular)
-                func drawCorner() {
-                    let rankText = NSAttributedString(string: rank.label, attributes: [.font: rankFont, .foregroundColor: color])
-                    let rs = rankText.size()
-                    rankText.draw(at: CGPoint(x: 52 - rs.width / 2, y: 14))
-                    let suitText = NSAttributedString(string: suit.symbol, attributes: [.font: suitFont, .foregroundColor: color])
-                    let ss = suitText.size()
-                    suitText.draw(at: CGPoint(x: 52 - ss.width / 2, y: 92))
-                }
-                drawCorner()
-                cg.saveGState()
-                cg.translateBy(x: size.width, y: size.height)
-                cg.rotate(by: .pi)
-                drawCorner()
-                cg.restoreGState()
-
-                // Mitte
-                let center = CGPoint(x: size.width / 2, y: size.height / 2)
-                if rank >= .jack && rank <= .king {
-                    let frame = rect.insetBy(dx: 92, dy: 120)
-                    let path = UIBezierPath(roundedRect: frame, cornerRadius: 14)
-                    (suit.isRed ? Theme.uiRed.withAlphaComponent(0.08) : UIColor(white: 0, alpha: 0.05)).setFill()
-                    path.fill()
-                    Theme.uiGold.setStroke()
-                    path.lineWidth = 5
-                    path.stroke()
-                    let crown = NSAttributedString(string: rank.label, attributes: [
-                        .font: UIFont.systemFont(ofSize: 150, weight: .black), .foregroundColor: color])
-                    let cs = crown.size()
-                    crown.draw(at: CGPoint(x: center.x - cs.width / 2, y: center.y - cs.height / 2 - 30))
-                    let s = NSAttributedString(string: suit.symbol, attributes: [
-                        .font: UIFont.systemFont(ofSize: 80), .foregroundColor: color])
-                    let ssz = s.size()
-                    s.draw(at: CGPoint(x: center.x - ssz.width / 2, y: center.y + 50))
-                } else {
-                    let big = NSAttributedString(string: suit.symbol, attributes: [
-                        .font: UIFont.systemFont(ofSize: rank == .ace ? 230 : 190), .foregroundColor: color])
-                    let bs = big.size()
-                    big.draw(at: CGPoint(x: center.x - bs.width / 2, y: center.y - bs.height / 2))
-                    if rank != .ace {
-                        let small = NSAttributedString(string: rank.label, attributes: [
-                            .font: UIFont.systemFont(ofSize: 60, weight: .bold), .foregroundColor: color.withAlphaComponent(0.85)])
-                        let s = small.size()
-                        small.draw(at: CGPoint(x: center.x - s.width / 2, y: center.y + bs.height / 2 - 20))
-                    }
-                }
+            return UIGraphicsImageRenderer(size: CardArt.size, format: format).image { ctx in
+                CardArt.drawFace(rank: rank, suit: suit, in: ctx.cgContext)
             }
         }
     }
 
     static func cardBack() -> UIImage {
         cached("card-back") {
-            let size = cardPixelSize
             let format = UIGraphicsImageRendererFormat()
             format.scale = 1
-            return UIGraphicsImageRenderer(size: size, format: format).image { ctx in
-                let rect = CGRect(origin: .zero, size: size)
-                let cg = ctx.cgContext
-                UIColor(red: 0.97, green: 0.96, blue: 0.94, alpha: 1).setFill()
-                UIBezierPath(roundedRect: rect, cornerRadius: 26).fill()
-                let inner = rect.insetBy(dx: 18, dy: 18)
-                let innerPath = UIBezierPath(roundedRect: inner, cornerRadius: 16)
-                Theme.uiRedDeep.setFill()
-                innerPath.fill()
-                cg.saveGState()
-                innerPath.addClip()
-                // Rautenmuster
-                cg.setStrokeColor(Theme.uiRed.withAlphaComponent(0.9).cgColor)
-                cg.setLineWidth(3)
-                var x: CGFloat = -size.height
-                while x < size.width + size.height {
-                    cg.move(to: CGPoint(x: x, y: 0)); cg.addLine(to: CGPoint(x: x + size.height, y: size.height))
-                    cg.move(to: CGPoint(x: x + size.height, y: 0)); cg.addLine(to: CGPoint(x: x, y: size.height))
-                    x += 26
-                }
-                cg.strokePath()
-                cg.restoreGState()
-                Theme.uiGold.setStroke()
-                innerPath.lineWidth = 4
-                innerPath.stroke()
-                // Medaillon
-                let medal = CGRect(x: size.width / 2 - 78, y: size.height / 2 - 78, width: 156, height: 156)
-                UIColor(red: 0.06, green: 0.06, blue: 0.07, alpha: 1).setFill()
-                UIBezierPath(ovalIn: medal).fill()
-                Theme.uiGold.setStroke()
-                let ring = UIBezierPath(ovalIn: medal.insetBy(dx: 4, dy: 4))
-                ring.lineWidth = 6
-                ring.stroke()
-                let bc = NSAttributedString(string: "BC", attributes: [
-                    .font: UIFont.systemFont(ofSize: 64, weight: .black), .foregroundColor: Theme.uiGoldLight])
-                let bs = bc.size()
-                bc.draw(at: CGPoint(x: size.width / 2 - bs.width / 2, y: size.height / 2 - bs.height / 2))
+            format.opaque = false
+            return UIGraphicsImageRenderer(size: CardArt.size, format: format).image { ctx in
+                CardArt.drawBack(in: ctx.cgContext)
             }
         }
     }
 
     // MARK: - Chips
 
+    /// Chip-Oberseite: Grundfarbe mit sechs Kanten-Inlays, Innenring und Wert – wie ein Clay-Chip.
     static func chipTop(_ d: ChipDenomination) -> UIImage {
         cached("chip-top-\(d.rawValue)") {
             let size = CGSize(width: 256, height: 256)
@@ -160,50 +66,69 @@ enum TextureFactory {
             format.scale = 1
             return UIGraphicsImageRenderer(size: size, format: format).image { ctx in
                 let cg = ctx.cgContext
-                let rect = CGRect(origin: .zero, size: size)
                 let c = CGPoint(x: 128, y: 128)
                 d.baseColor.setFill()
-                cg.fill(rect)
-                // Kantenmarkierungen
+                cg.fill(CGRect(origin: .zero, size: size))
+                // Kanten-Inlays
                 d.stripeColor.setFill()
-                for i in 0..<8 {
-                    let a = CGFloat(i) * .pi / 4
+                for i in 0..<6 {
                     cg.saveGState()
                     cg.translateBy(x: c.x, y: c.y)
-                    cg.rotate(by: a)
-                    cg.fill(CGRect(x: 96, y: -14, width: 34, height: 28))
+                    cg.rotate(by: CGFloat(i) * .pi / 3)
+                    UIBezierPath(roundedRect: CGRect(x: 100, y: -15, width: 30, height: 30), cornerRadius: 3).fill()
                     cg.restoreGState()
                 }
-                // Innenring
-                let inner = CGRect(x: 52, y: 52, width: 152, height: 152)
-                d.baseColor.withAlphaComponent(1).setFill()
+                // Leichte Vertiefung zum Rand hin
+                let rim = CGGradient(colorsSpace: CGColorSpaceCreateDeviceRGB(),
+                                     colors: [UIColor(white: 1, alpha: 0.06).cgColor, UIColor(white: 0, alpha: 0.22).cgColor] as CFArray,
+                                     locations: [0.6, 1])!
+                cg.drawRadialGradient(rim, startCenter: c, startRadius: 0, endCenter: c, endRadius: 128, options: [])
+                // Innenfeld mit Ring
+                let inner = CGRect(x: 58, y: 58, width: 140, height: 140)
+                d.baseColor.setFill()
                 UIBezierPath(ovalIn: inner).fill()
-                let ring = UIBezierPath(ovalIn: inner.insetBy(dx: 4, dy: 4))
-                ring.lineWidth = 4
-                Theme.uiGoldLight.withAlphaComponent(0.85).setStroke()
-                ring.setLineDash([10, 6], count: 2, phase: 0)
+                let ring = UIBezierPath(ovalIn: inner.insetBy(dx: 3, dy: 3))
+                ring.lineWidth = 3
+                d.stripeColor.withAlphaComponent(0.85).setStroke()
                 ring.stroke()
-                let text = NSAttributedString(string: d.label, attributes: [
-                    .font: UIFont.systemFont(ofSize: d.label.count > 3 ? 44 : 58, weight: .black),
-                    .foregroundColor: d.textColor])
+                let dashes = UIBezierPath(ovalIn: inner.insetBy(dx: 11, dy: 11))
+                dashes.lineWidth = 2
+                dashes.setLineDash([3, 5], count: 2, phase: 0)
+                d.stripeColor.withAlphaComponent(0.45).setStroke()
+                dashes.stroke()
+                let font = UIFont(name: "Georgia-Bold", size: d.label.count > 2 ? 46 : 58) ?? .systemFont(ofSize: 52, weight: .heavy)
+                let text = NSAttributedString(string: d.label, attributes: [.font: font, .foregroundColor: d.textColor])
                 let ts = text.size()
                 text.draw(at: CGPoint(x: c.x - ts.width / 2, y: c.y - ts.height / 2))
+                // Feine Materialkörnung
+                var rng = SystemRandomNumberGenerator()
+                for _ in 0..<1_500 {
+                    cg.setFillColor(UIColor(white: Bool.random(using: &rng) ? 1 : 0, alpha: 0.05).cgColor)
+                    cg.fill(CGRect(x: .random(in: 0..<256, using: &rng), y: .random(in: 0..<256, using: &rng), width: 1.5, height: 1.5))
+                }
             }
         }
     }
 
+    /// Chip-Seitenfläche: Grundfarbe mit hellen Kanteneinlagen und dunkleren Rändern oben/unten.
     static func chipEdge(_ d: ChipDenomination) -> UIImage {
         cached("chip-edge-\(d.rawValue)") {
             let size = CGSize(width: 512, height: 32)
             let format = UIGraphicsImageRendererFormat()
             format.scale = 1
             return UIGraphicsImageRenderer(size: size, format: format).image { ctx in
+                let cg = ctx.cgContext
                 d.baseColor.setFill()
-                ctx.cgContext.fill(CGRect(origin: .zero, size: size))
+                cg.fill(CGRect(origin: .zero, size: size))
                 d.stripeColor.setFill()
-                for i in 0..<8 {
-                    ctx.cgContext.fill(CGRect(x: CGFloat(i) * 64 + 20, y: 0, width: 24, height: 32))
+                for i in 0..<6 {
+                    cg.fill(CGRect(x: CGFloat(i) * (512 / 6) + 28, y: 0, width: 30, height: 32))
                 }
+                let shade = CGGradient(colorsSpace: CGColorSpaceCreateDeviceRGB(),
+                                       colors: [UIColor(white: 0, alpha: 0.3).cgColor, UIColor(white: 0, alpha: 0).cgColor,
+                                                UIColor(white: 0, alpha: 0).cgColor, UIColor(white: 0, alpha: 0.35).cgColor] as CFArray,
+                                       locations: [0, 0.25, 0.75, 1])!
+                cg.drawLinearGradient(shade, start: .zero, end: CGPoint(x: 0, y: 32), options: [])
             }
         }
     }
@@ -212,7 +137,8 @@ enum TextureFactory {
 
     enum FeltKind: String { case blackjack, poker }
 
-    /// Filz mit Aufdruck. Außerhalb der Tischform transparent, damit eine einfache Ebene genügt.
+    /// Dunkelgrüner Filz mit dezentem Aufdruck. Außerhalb der Tischform transparent.
+    /// Die feine Stoffstruktur kommt zusätzlich als gekachelte Textur (`feltWeave`).
     static func felt(_ kind: FeltKind) -> UIImage {
         cached("felt-\(kind.rawValue)") {
             let size = CGSize(width: 2048, height: 1024)
@@ -224,23 +150,13 @@ enum TextureFactory {
                 let shape = TableShape.feltPath(kind: kind, in: CGRect(origin: .zero, size: size))
                 cg.saveGState()
                 shape.addClip()
-                // Grundfarbe: tiefes Rot-Schwarz mit Vignette
-                let colors = [UIColor(red: 0.36, green: 0.03, blue: 0.06, alpha: 1).cgColor,
-                              UIColor(red: 0.12, green: 0.01, blue: 0.03, alpha: 1).cgColor] as CFArray
+                let colors = [UIColor(red: 0.07, green: 0.33, blue: 0.20, alpha: 1).cgColor,
+                              UIColor(red: 0.03, green: 0.20, blue: 0.12, alpha: 1).cgColor] as CFArray
                 let gradient = CGGradient(colorsSpace: CGColorSpaceCreateDeviceRGB(), colors: colors, locations: [0, 1])!
-                let center = kind == .blackjack ? CGPoint(x: size.width / 2, y: size.height * 0.35)
+                let center = kind == .blackjack ? CGPoint(x: size.width / 2, y: size.height * 0.45)
                                                 : CGPoint(x: size.width / 2, y: size.height / 2)
                 cg.drawRadialGradient(gradient, startCenter: center, startRadius: 0, endCenter: center,
-                                      endRadius: size.width * 0.6, options: [.drawsAfterEndLocation])
-                // Feine Filzstruktur
-                var rng = SystemRandomNumberGenerator()
-                for _ in 0..<26_000 {
-                    let x = CGFloat.random(in: 0..<size.width, using: &rng)
-                    let y = CGFloat.random(in: 0..<size.height, using: &rng)
-                    let a = CGFloat.random(in: 0.02...0.06, using: &rng)
-                    cg.setFillColor(UIColor(white: Bool.random(using: &rng) ? 1 : 0, alpha: a).cgColor)
-                    cg.fill(CGRect(x: x, y: y, width: 2, height: 2))
-                }
+                                      endRadius: size.width * 0.62, options: [.drawsAfterEndLocation])
                 switch kind {
                 case .blackjack: drawBlackjackPrint(cg, size: size)
                 case .poker: drawPokerPrint(cg, size: size)
@@ -250,8 +166,34 @@ enum TextureFactory {
         }
     }
 
+    /// Kachelbare Stoffstruktur (wird über den Filz multipliziert).
+    static func feltWeave() -> UIImage {
+        cached("felt-weave") {
+            let size = CGSize(width: 256, height: 256)
+            let format = UIGraphicsImageRendererFormat()
+            format.scale = 1
+            format.opaque = true
+            return UIGraphicsImageRenderer(size: size, format: format).image { ctx in
+                let cg = ctx.cgContext
+                UIColor(white: 0.93, alpha: 1).setFill()
+                cg.fill(CGRect(origin: .zero, size: size))
+                var rng = SystemRandomNumberGenerator()
+                // Feine Fasern in zwei Richtungen
+                for _ in 0..<5_000 {
+                    let x = CGFloat.random(in: 0..<256, using: &rng), y = CGFloat.random(in: 0..<256, using: &rng)
+                    let horizontal = Bool.random(using: &rng)
+                    cg.setFillColor(UIColor(white: .random(in: 0.78...1.0, using: &rng), alpha: 1).cgColor)
+                    cg.fill(horizontal ? CGRect(x: x, y: y, width: .random(in: 2...5, using: &rng), height: 1)
+                                       : CGRect(x: x, y: y, width: 1, height: .random(in: 2...5, using: &rng)))
+                }
+            }
+        }
+    }
+
+    private static let printColor = UIColor(red: 0.93, green: 0.87, blue: 0.70, alpha: 1)
+
     private static func drawBlackjackPrint(_ cg: CGContext, size: CGSize) {
-        let gold = Theme.uiGold
+        let gold = printColor.withAlphaComponent(0.8)
         // Bogenlinien
         cg.setStrokeColor(gold.withAlphaComponent(0.75).cgColor)
         cg.setLineWidth(5)
@@ -287,7 +229,7 @@ enum TextureFactory {
     }
 
     private static func drawPokerPrint(_ cg: CGContext, size: CGSize) {
-        let gold = Theme.uiGold
+        let gold = printColor.withAlphaComponent(0.8)
         let inner = CGRect(x: size.width * 0.17, y: size.height * 0.2, width: size.width * 0.66, height: size.height * 0.6)
         let line = UIBezierPath(roundedRect: inner, cornerRadius: inner.height / 2)
         cg.setStrokeColor(gold.withAlphaComponent(0.55).cgColor)
@@ -336,12 +278,14 @@ enum TextureFactory {
                 UIColor(red: 0.02, green: 0.02, blue: 0.025, alpha: 1).setFill()
                 cg.fill(CGRect(origin: .zero, size: size))
                 var rng = SystemRandomNumberGenerator()
-                let palette: [UIColor] = [Theme.uiRed, Theme.uiRedDeep, Theme.uiGold, UIColor(red: 1, green: 0.55, blue: 0.3, alpha: 1)]
+                // Warme, gedämpfte Lichter eines Spielsaals (kein Neon)
+                let palette: [UIColor] = [UIColor(red: 1, green: 0.78, blue: 0.5, alpha: 1), UIColor(red: 0.9, green: 0.6, blue: 0.35, alpha: 1),
+                                          Theme.uiGold, UIColor(red: 0.55, green: 0.12, blue: 0.12, alpha: 1)]
                 for _ in 0..<70 {
                     let r = CGFloat.random(in: 20...110, using: &rng)
                     let p = CGPoint(x: .random(in: 0...size.width, using: &rng), y: .random(in: size.height * 0.15...size.height * 0.75, using: &rng))
                     let color = palette.randomElement(using: &rng)!
-                    let colors = [color.withAlphaComponent(.random(in: 0.15...0.45, using: &rng)).cgColor,
+                    let colors = [color.withAlphaComponent(.random(in: 0.06...0.22, using: &rng)).cgColor,
                                   color.withAlphaComponent(0).cgColor] as CFArray
                     let g = CGGradient(colorsSpace: CGColorSpaceCreateDeviceRGB(), colors: colors, locations: [0, 1])!
                     cg.drawRadialGradient(g, startCenter: p, startRadius: 0, endCenter: p, endRadius: r, options: [])

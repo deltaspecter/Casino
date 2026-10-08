@@ -17,26 +17,6 @@ struct PokerView: View {
     }
 }
 
-/// 2D-Karte für HUD-Elemente (gleiche Textur wie im 3D-Raum).
-struct PlayingCardView: View {
-    let card: Card?
-    var faceUp = true
-    var width: CGFloat = 70
-
-    var body: some View {
-        let image: UIImage = {
-            if let card, faceUp { return TextureFactory.cardFace(rank: card.rank, suit: card.suit) }
-            return TextureFactory.cardBack()
-        }()
-        Image(uiImage: image)
-            .resizable()
-            .aspectRatio(CGFloat(TextureFactory.cardPixelSize.width / TextureFactory.cardPixelSize.height), contentMode: .fit)
-            .frame(width: width)
-            .shadow(color: .black.opacity(0.5), radius: 6, y: 3)
-            .accessibilityLabel(card.map { faceUp ? $0.description : "verdeckte Karte" } ?? "Karte")
-    }
-}
-
 private struct PokerScreen: View {
     @Environment(AppModel.self) private var model
     @Bindable var viewModel: PokerViewModel
@@ -45,25 +25,28 @@ private struct PokerScreen: View {
 
     var body: some View {
         ZStack {
-            SceneContainer(stage: viewModel.table.stage) { points in
-                viewModel.anchors = points
-            }
-            .ignoresSafeArea()
-
-            seatOverlays
-                .ignoresSafeArea()
-                .allowsHitTesting(false)
-
+            // Tisch oberhalb der Leiste; Namensschilder liegen auf der Rail, nicht auf den Karten.
             VStack(spacing: 0) {
-                GameTopBar(title: "TEXAS HOLD'EM",
-                           subtitle: "No Limit · Blinds \(viewModel.selectedTable.smallBlind)/\(viewModel.selectedTable.bigBlind)",
-                           onLeave: { viewModel.leave() },
-                           onRules: { showRules = true },
-                           onHelp: { showTutorial = true })
-                Spacer()
-                bottomArea
-                    .padding(.horizontal, Theme.gutter)
-                    .padding(.bottom, 20)
+                SceneContainer(stage: viewModel.table.stage) { points in
+                    viewModel.anchors = points
+                }
+                .ignoresSafeArea(edges: [.top, .horizontal])
+                .overlay { seatOverlays.allowsHitTesting(false) }
+                .overlay(alignment: .top) {
+                    GameTopBar(title: "TEXAS HOLD'EM",
+                               subtitle: "No Limit · Blinds \(viewModel.selectedTable.smallBlind)/\(viewModel.selectedTable.bigBlind)",
+                               showsBalance: false,
+                               onLeave: { viewModel.leave() },
+                               onRules: { showRules = true },
+                               onHelp: { showTutorial = true })
+                }
+                if viewModel.stage != .setup {
+                    TableBar {
+                        infoRow
+                    } controls: {
+                        HStack { Spacer(minLength: 0); controls }
+                    }
+                }
             }
 
             if viewModel.stage == .setup {
@@ -85,10 +68,6 @@ private struct PokerScreen: View {
 
     private var seatOverlays: some View {
         ZStack {
-            if viewModel.pot > 0, let point = viewModel.anchors["pot"] {
-                FloatingTag(text: ChipFormat.string(viewModel.pot), detail: "POT")
-                    .position(point)
-            }
             ForEach(viewModel.seats.filter { !$0.isHuman }) { seat in
                 if let point = viewModel.anchors["seat-\(seat.id)"] {
                     SeatBadge(seat: seat,
@@ -96,7 +75,7 @@ private struct PokerScreen: View {
                               isThinking: viewModel.thinkingSeatID == seat.id,
                               isButton: viewModel.buttonSeatID == seat.id,
                               revealedHand: viewModel.revealedSeats.contains(seat.id) ? viewModel.showdownHands[seat.id] : nil,
-                              showCards: viewModel.revealedSeats.contains(seat.id))
+                              showCards: false)
                         .position(point)
                 }
             }
@@ -105,67 +84,27 @@ private struct PokerScreen: View {
 
     // MARK: - Unterer Bereich
 
-    @ViewBuilder private var bottomArea: some View {
-        switch viewModel.stage {
-        case .setup:
-            EmptyView()
-        case .playing, .handOver, .busted:
-            HStack(alignment: .bottom, spacing: 20) {
-                humanPanel
-                Spacer(minLength: 0)
-                VStack(alignment: .trailing, spacing: 14) {
-                    if let text = viewModel.resultText, viewModel.stage != .playing {
-                        Text(text)
-                            .font(.system(size: 17, weight: .bold))
-                            .foregroundStyle(viewModel.humanWonLastHand ? Theme.goldLight : .white)
-                            .multilineTextAlignment(.trailing)
-                            .padding(14)
-                            .glassPanel(cornerRadius: 18)
-                    }
-                    controls
-                }
-            }
-        }
-    }
+    // MARK: - Informationen in der Leiste
 
-    private var humanPanel: some View {
-        HStack(spacing: 14) {
-            HStack(spacing: -18) {
-                ForEach(Array((viewModel.human?.holeCards ?? []).enumerated()), id: \.offset) { i, card in
-                    PlayingCardView(card: card, faceUp: true, width: 88)
-                        .rotationEffect(.degrees(i == 0 ? -6 : 6), anchor: .bottom)
-                        .opacity(viewModel.human?.hasFolded == true ? 0.4 : 1)
-                }
-            }
-            .frame(minWidth: 160, minHeight: 130)
-
-            VStack(alignment: .leading, spacing: 6) {
-                Text(viewModel.human?.name ?? "")
-                    .font(.system(size: 15, weight: .bold)).foregroundStyle(Theme.textSecondary)
-                HStack(spacing: 8) {
-                    ChipIcon(size: 18)
-                    Text(ChipFormat.string(viewModel.human?.stack ?? 0))
-                        .font(.numeric(24, weight: .black)).foregroundStyle(.white)
-                }
-                if let handName = viewModel.humanHandName, viewModel.human?.hasFolded == false {
-                    Text(handName.uppercased())
-                        .font(.system(size: 13, weight: .heavy)).tracking(1.5)
-                        .foregroundStyle(Theme.gold)
-                }
-                if let action = viewModel.lastActions[PokerViewModel.humanSeatID] {
-                    Text(action).font(.system(size: 13, weight: .semibold)).foregroundStyle(Theme.textSecondary)
-                }
-                if viewModel.buttonSeatID == PokerViewModel.humanSeatID {
-                    Text("DEALER-BUTTON").font(.system(size: 11, weight: .bold)).foregroundStyle(Theme.textTertiary)
-                }
-            }
+    @ViewBuilder private var infoRow: some View {
+        InfoItem(title: "Virtuelle Chips", value: ChipFormat.string(model.chips))
+        InfoItem(title: "Dein Stack", value: ChipFormat.string(viewModel.human?.stack ?? 0))
+        InfoItem(title: "Einsatz", value: ChipFormat.string(viewModel.human?.streetBet ?? 0))
+        InfoItem(title: "Pot", value: ChipFormat.string(viewModel.pot))
+        if let handName = viewModel.humanHandName, viewModel.human?.hasFolded == false {
+            InfoItem(title: "Deine Hand", value: handName, valueColor: Theme.goldLight)
         }
-        .padding(16)
-        .glassPanel(cornerRadius: 26, tint: viewModel.isHumanTurn ? Theme.redDeep : .black)
-        .overlay(
-            RoundedRectangle(cornerRadius: 26, style: .continuous)
-                .strokeBorder(Theme.red.opacity(viewModel.isHumanTurn ? 0.9 : 0), lineWidth: 2)
-        )
+        if let action = viewModel.lastActions[PokerViewModel.humanSeatID] {
+            InfoItem(title: "Letzte Aktion", value: action)
+        }
+        Spacer(minLength: 0)
+        if let text = viewModel.resultText, viewModel.stage != .playing {
+            Text(text.components(separatedBy: "\n").first ?? text)
+                .font(.system(size: 14, weight: .semibold))
+                .foregroundStyle(viewModel.humanWonLastHand ? Theme.goldLight : Theme.textSecondary)
+                .lineLimit(1)
+                .minimumScaleFactor(0.7)
+        }
     }
 
     @ViewBuilder private var controls: some View {
@@ -177,8 +116,7 @@ private struct PokerScreen: View {
                 Text(viewModel.thinkingSeatID != nil ? "Gegner überlegt …" : " ")
                     .font(.system(size: 15, weight: .semibold))
                     .foregroundStyle(Theme.textSecondary)
-                    .padding(.vertical, 22).padding(.horizontal, 26)
-                    .glassPanel(cornerRadius: 24)
+                    .frame(height: 68)
             }
         case .handOver:
             HStack(spacing: 12) {
@@ -202,22 +140,29 @@ private struct PokerScreen: View {
     }
 
     private func actionControls(_ legal: PokerLegalActions) -> some View {
-        VStack(alignment: .trailing, spacing: 12) {
-            if legal.canRaise && legal.maxRaiseTo > legal.minRaiseTo {
-                HStack(spacing: 10) {
-                    quickRaise("MIN") { viewModel.raiseTarget = Double(legal.minRaiseTo) }
-                    quickRaise("½ POT") { viewModel.setRaise(potFraction: 0.5) }
-                    quickRaise("POT") { viewModel.setRaise(potFraction: 1) }
-                    quickRaise("ALL-IN") { viewModel.raiseTarget = Double(legal.maxRaiseTo) }
-                    Slider(value: $viewModel.raiseTarget,
-                           in: Double(legal.minRaiseTo)...Double(legal.maxRaiseTo),
-                           step: Double(max(1, min(viewModel.bigBlind, legal.maxRaiseTo - legal.minRaiseTo))))
-                        .tint(Theme.red)
-                        .frame(width: 220)
-                }
-                .padding(12)
-                .glassPanel(cornerRadius: 22)
+        ViewThatFits(in: .horizontal) {
+            HStack(spacing: 14) { raiseRow(legal); actionButtons(legal) }
+            VStack(alignment: .trailing, spacing: 10) { raiseRow(legal); actionButtons(legal) }
+        }
+    }
+
+    @ViewBuilder private func raiseRow(_ legal: PokerLegalActions) -> some View {
+        if legal.canRaise && legal.maxRaiseTo > legal.minRaiseTo {
+            HStack(spacing: 8) {
+                quickRaise("MIN") { viewModel.raiseTarget = Double(legal.minRaiseTo) }
+                quickRaise("½ POT") { viewModel.setRaise(potFraction: 0.5) }
+                quickRaise("POT") { viewModel.setRaise(potFraction: 1) }
+                Slider(value: $viewModel.raiseTarget,
+                       in: Double(legal.minRaiseTo)...Double(legal.maxRaiseTo),
+                       step: Double(max(1, min(viewModel.bigBlind, legal.maxRaiseTo - legal.minRaiseTo))))
+                    .tint(Theme.red)
+                    .frame(minWidth: 160, maxWidth: 240)
             }
+        }
+    }
+
+    private func actionButtons(_ legal: PokerLegalActions) -> some View {
+        VStack(alignment: .trailing, spacing: 12) {
             HStack(spacing: 12) {
                 Button("FOLD") { Task { await viewModel.act(.fold) } }
                     .buttonStyle(.casino(.secondary, size: .large))
@@ -368,13 +313,12 @@ private struct SeatBadge: View {
                     .foregroundStyle(revealedHand != nil ? Theme.gold : Theme.textSecondary)
                     .lineLimit(1)
             }
-            .padding(.horizontal, 14).padding(.vertical, 8)
-            .background(RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .fill(isThinking ? AnyShapeStyle(Theme.redGradient) : AnyShapeStyle(Color.black.opacity(0.7))))
-            .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .strokeBorder(isThinking ? Theme.goldLight.opacity(0.7) : Color.white.opacity(0.12)))
+            .padding(.horizontal, 12).padding(.vertical, 6)
+            .background(RoundedRectangle(cornerRadius: 12, style: .continuous)
+                .fill(Color.black.opacity(0.62)))
+            .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous)
+                .strokeBorder(isThinking ? Theme.red.opacity(0.9) : Color.white.opacity(0.10), lineWidth: isThinking ? 1.5 : 1))
             .opacity(seat.hasFolded ? 0.45 : 1)
-            .scaleEffect(isThinking ? 1.06 : 1)
             .animation(.easeInOut(duration: 0.25), value: isThinking)
         }
         .fixedSize()

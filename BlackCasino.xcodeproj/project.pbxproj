@@ -22,6 +22,7 @@
 		48164A9613776B3B12BDF3EA /* StartView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CF20623B5C7AA0B25CA3879A /* StartView.swift */; };
 		4BFF4CA4A9CCB452CF11C658 /* StatisticsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E9FE4BB5C06377DE4023BCC8 /* StatisticsView.swift */; };
 		532B4A2E6E9394D5E59D49F6 /* OnlineService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8B9759B52123E894DC46E970 /* OnlineService.swift */; };
+		5FEBBF907FBA55662D9A580E /* CardArt.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA4F26F411568DA5F515F6BF /* CardArt.swift */; };
 		621F938C3478FEC4C15A1C9F /* Effects.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BD4D5B160C9645C4B737138 /* Effects.swift */; };
 		64D324E411CAEB778FA7FAC1 /* SceneContainer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C6AFAC82B1CD1F8B8CE5174 /* SceneContainer.swift */; };
 		6BC2140DA7005E8E830160D9 /* LoadingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3BC3774F823FF4C6CD9FEF26 /* LoadingView.swift */; };
@@ -45,6 +46,7 @@
 		BBE44873130DF9ECA3B90007 /* PokerViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = B796A493E876EC8293407DAF /* PokerViewModel.swift */; };
 		D2DE9FB9745E45098A3AEEA5 /* RewardsViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = CFA5A56462270AC7C52E269F /* RewardsViews.swift */; };
 		D8F8583DB3EA6C23FA3425CB /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0373B7A0D213EB0CD9ACF32E /* RootView.swift */; };
+		E2EDDC55DE246A54D884A192 /* TableComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E444B3EF4F26CB044726677 /* TableComponents.swift */; };
 		F3531DA63D11180201CF83CC /* SceneKitSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20451718197EAB1A4A89105B /* SceneKitSupport.swift */; };
 		FD3DDFAF8C9FA737552E0D9E /* DealerAvatar.swift in Sources */ = {isa = PBXBuildFile; fileRef = C4FAB4BBF48723CADE58EDBA /* DealerAvatar.swift */; };
 /* End PBXBuildFile section */
@@ -69,6 +71,7 @@
 		6991AED50E264814BC7DFD3A /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		776DF4AE00AEFCA77075F119 /* PokerTable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PokerTable.swift; sourceTree = "<group>"; };
 		8B9759B52123E894DC46E970 /* OnlineService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnlineService.swift; sourceTree = "<group>"; };
+		8E444B3EF4F26CB044726677 /* TableComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TableComponents.swift; sourceTree = "<group>"; };
 		94EC583F6BE7E8CC4CEDA462 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		9625D2C9DA2C497FA73F073D /* ChipStackNode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChipStackNode.swift; sourceTree = "<group>"; };
 		96D347E774A71B89632C37FE /* Components.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Components.swift; sourceTree = "<group>"; };
@@ -89,6 +92,7 @@
 		D8ADBB2C3F60149A12F85F14 /* SlotMachineView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SlotMachineView.swift; sourceTree = "<group>"; };
 		E7E92C06102B90589821A0A9 /* MainMenuView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainMenuView.swift; sourceTree = "<group>"; };
 		E9FE4BB5C06377DE4023BCC8 /* StatisticsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatisticsView.swift; sourceTree = "<group>"; };
+		EA4F26F411568DA5F515F6BF /* CardArt.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardArt.swift; sourceTree = "<group>"; };
 		F0F7780C1828029CC90C9D48 /* SlotsLobbyView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SlotsLobbyView.swift; sourceTree = "<group>"; };
 		F512DFFDDF4E17D25BD23218 /* SlotTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SlotTheme.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -183,6 +187,7 @@
 				96D347E774A71B89632C37FE /* Components.swift */,
 				2BD4D5B160C9645C4B737138 /* Effects.swift */,
 				BD566D9E2C6C294CBA2B8B75 /* Haptics.swift */,
+				8E444B3EF4F26CB044726677 /* TableComponents.swift */,
 				539A3CFD5B7FD648EA9133C8 /* Theme.swift */,
 			);
 			path = Design;
@@ -212,6 +217,7 @@
 		E52D447BFA8FFC1B0D42962B /* Scene3D */ = {
 			isa = PBXGroup;
 			children = (
+				EA4F26F411568DA5F515F6BF /* CardArt.swift */,
 				B414E65661F57AB4986EE525 /* CardNode.swift */,
 				3CDBB235D864FDA9C86D3C52 /* CasinoStage.swift */,
 				9625D2C9DA2C497FA73F073D /* ChipStackNode.swift */,
@@ -336,6 +342,7 @@
 				01334CD4E653C5E0C903365C /* BlackjackTable.swift in Sources */,
 				25208C3657EE9DADA539EE74 /* BlackjackView.swift in Sources */,
 				AD075CDCB906A265E162AD77 /* BlackjackViewModel.swift in Sources */,
+				5FEBBF907FBA55662D9A580E /* CardArt.swift in Sources */,
 				88657FE077226B7E2642DCB4 /* CardNode.swift in Sources */,
 				6D679B7DC86327E332213128 /* CasinoStage.swift in Sources */,
 				A7A2F8ECFABA66E1DB4346FF /* ChipStackNode.swift in Sources */,
@@ -366,6 +373,7 @@
 				96DE84F6B9534EB913A82101 /* SlotsViewModel.swift in Sources */,
 				48164A9613776B3B12BDF3EA /* StartView.swift in Sources */,
 				4BFF4CA4A9CCB452CF11C658 /* StatisticsView.swift in Sources */,
+				E2EDDC55DE246A54D884A192 /* TableComponents.swift in Sources */,
 				7AECCE242CE43B0E7C171EA6 /* TextureFactory.swift in Sources */,
 				3E41BC66746500A8364A3CE4 /* Theme.swift in Sources */,
 			);

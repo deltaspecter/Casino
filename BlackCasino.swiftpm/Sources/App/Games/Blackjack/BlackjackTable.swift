@@ -9,6 +9,8 @@ final class BlackjackTable {
         static let discard = SCNVector3(-0.62, 0.06, -0.2)
         static let dealerTray = SCNVector3(0, 0.03, -0.29)
         static let playerEdge = SCNVector3(0, 0.06, 0.75)
+        /// Bereich vor dem Spieler, aus dem Einsätze auf den Tisch geschoben werden.
+        static let playerSide: Float = 0.44
         static let dealerRowZ: Float = -0.15
         static let handZ: Float = 0.08
         static let betZ: Float = 0.22
@@ -24,11 +26,12 @@ final class BlackjackTable {
     init(reducedEffects: Bool) {
         stage = CasinoStage(
             kind: .blackjack,
-            camera: .init(position: SCNVector3(0, 1.02, 1.02), target: SCNVector3(0, 0.05, -0.12), fieldOfView: 44),
+            camera: .init(position: SCNVector3(0, 0.98, 1.0), target: SCNVector3(0, 0.02, -0.12), fieldOfView: 62),
             dealerPosition: SCNVector3(0, -0.02, -0.64),
             reducedEffects: reducedEffects
         )
         stage.setAnchor("dealer", at: SCNVector3(0, 0.0, Layout.dealerRowZ + 0.08))
+        if !reducedEffects { stage.startSubtleSway(target: SCNVector3(0, 0.02, -0.12)) }
     }
 
     // MARK: - Positionen
@@ -63,23 +66,37 @@ final class BlackjackTable {
 
     // MARK: - Einsätze
 
+    /// Chips gleiten vom Spielerplatz ins Einsatzfeld.
     func placeBet(handID: Int, amount: Int) async {
         if !handOrder.contains(handID) {
             handOrder.append(handID)
             updateAnchors()
         }
-        let stack = betStacks[handID] ?? {
-            let s = ChipStackNode(amount: 0)
-            s.position = betPosition(handID: handID)
-            stage.tableRoot.addChildNode(s)
-            betStacks[handID] = s
-            return s
-        }()
-        await stack.dropIn(amount: amount)
+        if betStacks[handID] != nil {
+            await updateBet(handID: handID, amount: amount)
+            return
+        }
+        let target = betPosition(handID: handID)
+        let stack = ChipStackNode(amount: amount)
+        stack.position = SCNVector3(target.x, 0.02, Layout.playerSide)
+        stage.tableRoot.addChildNode(stack)
+        betStacks[handID] = stack
+        Haptics.chip()
+        await stack.slide(to: target, duration: 0.36)
     }
 
+    /// Zusätzliche Chips (Double/Split) gleiten auf den bestehenden Stapel.
     func updateBet(handID: Int, amount: Int) async {
-        await betStacks[handID]?.dropIn(amount: amount)
+        guard let stack = betStacks[handID] else { return }
+        let extra = amount - stack.amount
+        guard extra > 0 else { return }
+        let incoming = ChipStackNode(amount: extra)
+        incoming.position = SCNVector3(stack.position.x, 0.02, Layout.playerSide)
+        stage.tableRoot.addChildNode(incoming)
+        Haptics.chip()
+        await incoming.slide(to: stack.position + SCNVector3(0, stack.height, 0), duration: 0.36)
+        incoming.removeFromParentNode()
+        stack.setAmount(amount)
     }
 
     // MARK: - Karten

@@ -1,4 +1,5 @@
 import SceneKit
+import UIKit
 import CasinoCore
 
 /// 3D-Spielkarte aus zwei abgerundeten Flächen (Vorder- und Rückseite).
@@ -21,12 +22,12 @@ final class CardNode: SCNNode {
 
         let frontPlane = SCNPlane(width: Self.width, height: Self.height)
         frontPlane.cornerRadius = 0.0045
-        frontPlane.firstMaterial = Materials.textured(TextureFactory.cardFace(rank: card.rank, suit: card.suit), roughness: 0.42)
+        frontPlane.firstMaterial = Self.paper(TextureFactory.cardFace(rank: card.rank, suit: card.suit))
         let front = SCNNode(geometry: frontPlane)
 
         let backPlane = SCNPlane(width: Self.width, height: Self.height)
         backPlane.cornerRadius = 0.0045
-        backPlane.firstMaterial = Materials.textured(TextureFactory.cardBack(), roughness: 0.38)
+        backPlane.firstMaterial = Self.paper(TextureFactory.cardBack())
         let back = SCNNode(geometry: backPlane)
         back.eulerAngles.y = .pi
         back.position.z = -0.0003
@@ -43,21 +44,37 @@ final class CardNode: SCNNode {
     @available(*, unavailable)
     required init?(coder: NSCoder) { fatalError("init(coder:) is not supported") }
 
+    /// Kaschierter Karton: matt mit leichtem Glanz, wie eine echte Spielkarte.
+    private static func paper(_ image: UIImage) -> SCNMaterial {
+        let m = Materials.textured(image, roughness: 0.5)
+        m.clearCoat.contents = 0.35
+        m.clearCoatRoughness.contents = 0.25
+        return m
+    }
+
     /// Bogenförmiger Flug vom Schlitten an die Zielposition – mit Drehung beim Landen.
     @MainActor
     func fly(to target: SCNVector3, yaw: Float = 0, faceUp: Bool, duration: TimeInterval = 0.42, arc: Float = 0.07) async {
         isFaceUp = faceUp
-        let mid = SCNVector3.lerp(position, target, 0.5) + SCNVector3(0, arc, 0)
+        // Minimale, rein optische Streuung wie bei von Hand gegebenen Karten
+        let landingYaw = yaw + Float.random(in: -0.05...0.05)
+        let landing = target + SCNVector3(Float.random(in: -0.002...0.002), 0, Float.random(in: -0.002...0.002))
+        let mid = SCNVector3.lerp(position, landing, 0.5) + SCNVector3(0, arc, 0)
         let up = SCNAction.move(to: mid, duration: duration * 0.45)
         up.timingMode = .easeOut
-        let down = SCNAction.move(to: target, duration: duration * 0.55)
+        let down = SCNAction.move(to: landing, duration: duration * 0.55)
         down.timingMode = .easeIn
-        let rotate = SCNAction.rotateTo(x: 0, y: CGFloat(yaw), z: faceUp ? 0 : .pi, duration: duration, usesShortestUnitArc: true)
-        rotate.timingMode = .easeInEaseOut
-        // Kleiner „Rutscher“ nach dem Aufsetzen wie bei echtem Karton auf Filz
-        let slide = SCNAction.move(by: SCNVector3(0, 0, 0.004), duration: 0.08)
+        // Im Flug leicht angekippt und gedreht, beim Landen flach
+        let tilt = SCNAction.rotateTo(x: -0.22, y: CGFloat(landingYaw * 0.5 - 0.25), z: faceUp ? .pi / 2 : .pi,
+                                      duration: duration * 0.5, usesShortestUnitArc: true)
+        tilt.timingMode = .easeOut
+        let settle = SCNAction.rotateTo(x: 0, y: CGFloat(landingYaw), z: faceUp ? 0 : .pi,
+                                        duration: duration * 0.5, usesShortestUnitArc: true)
+        settle.timingMode = .easeIn
+        // Kurzer Rutscher auf dem Filz nach dem Aufsetzen
+        let slide = SCNAction.move(by: SCNVector3(0, 0, 0.005), duration: 0.09)
         slide.timingMode = .easeOut
-        await run(.sequence([.group([.sequence([up, down]), rotate]), slide]))
+        await run(.sequence([.group([.sequence([up, down]), .sequence([tilt, settle])]), slide]))
     }
 
     /// Umdrehen an Ort und Stelle (anheben, drehen, ablegen).

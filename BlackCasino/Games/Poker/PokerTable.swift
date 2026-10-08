@@ -25,7 +25,7 @@ final class PokerTable {
     init(reducedEffects: Bool) {
         stage = CasinoStage(
             kind: .poker,
-            camera: .init(position: SCNVector3(0, 1.62, 1.38), target: SCNVector3(0, -0.02, 0.02), fieldOfView: 46),
+            camera: .init(position: SCNVector3(0, 1.55, 1.42), target: SCNVector3(0, -0.02, 0.04), fieldOfView: 66),
             dealerPosition: SCNVector3(0, -0.05, -0.78),
             reducedEffects: reducedEffects
         )
@@ -36,6 +36,7 @@ final class PokerTable {
         buttonDisc.opacity = 0
         stage.tableRoot.addChildNode(buttonDisc)
         stage.setAnchor("pot", at: SCNVector3(potPosition.x, 0, potPosition.z + 0.08))
+        if !reducedEffects { stage.startSubtleSway(target: SCNVector3(0, -0.02, 0.04)) }
     }
 
     private static func dealerButtonTexture() -> UIImage {
@@ -137,17 +138,30 @@ final class PokerTable {
         await flipTogether(Array(communityCards.suffix(cards.count)))
     }
 
+    /// Einsätze gleiten vom Platz des Spielers in seinen Einsatzbereich.
     func setBet(seat: Int, amount: Int) async {
         guard amount > 0 else { return }
-        let stack = betStacks[seat] ?? {
-            let s = ChipStackNode(amount: 0, maxChips: 14)
-            s.scale = SCNVector3(Self.chipScale, Self.chipScale, Self.chipScale)
-            s.position = betPosition(seat: seat)
-            stage.tableRoot.addChildNode(s)
-            betStacks[seat] = s
-            return s
-        }()
-        await stack.dropIn(amount: amount)
+        let origin = point(forSeat: seat, radius: 0.86, y: 0.02)
+        if let stack = betStacks[seat] {
+            let extra = amount - stack.amount
+            guard extra > 0 else { return }
+            let incoming = ChipStackNode(amount: extra, maxChips: 14)
+            incoming.scale = SCNVector3(Self.chipScale, Self.chipScale, Self.chipScale)
+            incoming.position = origin
+            stage.tableRoot.addChildNode(incoming)
+            Haptics.chip()
+            await incoming.slide(to: stack.position + SCNVector3(0, stack.height * Self.chipScale, 0), duration: 0.32)
+            incoming.removeFromParentNode()
+            stack.setAmount(amount)
+            return
+        }
+        let stack = ChipStackNode(amount: amount, maxChips: 14)
+        stack.scale = SCNVector3(Self.chipScale, Self.chipScale, Self.chipScale)
+        stack.position = origin
+        stage.tableRoot.addChildNode(stack)
+        betStacks[seat] = stack
+        Haptics.chip()
+        await stack.slide(to: betPosition(seat: seat), duration: 0.32)
     }
 
     func collectBets(potTotal: Int) async {

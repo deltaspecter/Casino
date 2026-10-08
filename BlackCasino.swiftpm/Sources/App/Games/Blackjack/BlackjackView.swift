@@ -24,34 +24,25 @@ private struct BlackjackScreen: View {
     @State private var showRules = false
 
     var body: some View {
-        ZStack {
-            SceneContainer(stage: viewModel.table.stage) { points in
-                viewModel.anchors = points
-            }
-            .ignoresSafeArea()
-
-            anchoredLabels
-                .ignoresSafeArea()
-                .allowsHitTesting(false)
-
-            VStack(spacing: 0) {
-                GameTopBar(title: "BLACKJACK",
-                           subtitle: "1 Deck, jede Runde neu gemischt · Dealer steht auf 17 · Blackjack 3:2",
-                           onLeave: { viewModel.leave() },
-                           onRules: { showRules = true },
-                           onHelp: { showTutorial = true })
-                Spacer()
-                if let summary = viewModel.summary, viewModel.stage == .roundOver {
-                    ResultBanner(title: summary.title, net: summary.net, isWin: summary.isWin)
-                        .padding(.bottom, 20)
+        // Der Tisch bekommt den Raum oberhalb der Leiste – Informationen liegen nie über den Karten.
+        VStack(spacing: 0) {
+            SceneContainer(stage: viewModel.table.stage)
+                .ignoresSafeArea(edges: [.top, .horizontal])
+                .overlay(alignment: .top) {
+                    GameTopBar(title: "BLACKJACK",
+                               subtitle: "1 Deck, jede Runde neu gemischt · Dealer steht auf 17 · Blackjack 3:2",
+                               showsBalance: false,
+                               onLeave: { viewModel.leave() },
+                               onRules: { showRules = true },
+                               onHelp: { showTutorial = true })
                 }
+            TableBar {
+                infoRow
+            } controls: {
                 controls
-                    .padding(.horizontal, Theme.gutter)
-                    .padding(.bottom, 22)
             }
-            .animation(.spring(response: 0.45, dampingFraction: 0.82), value: viewModel.stage)
-            .animation(.spring(response: 0.45, dampingFraction: 0.82), value: viewModel.summary)
         }
+        .animation(.spring(response: 0.4, dampingFraction: 0.85), value: viewModel.stage)
         .background(Color.black)
         .onAppear {
             if !model.isTutorialCompleted(.blackjack) { showTutorial = true }
@@ -61,24 +52,30 @@ private struct BlackjackScreen: View {
         .sheet(isPresented: $showRules) { RulesSheet(game: .blackjack) }
     }
 
-    // MARK: - 3D-Labels
+    // MARK: - Informationen (unter dem Tisch, nie über den Karten)
 
-    private var anchoredLabels: some View {
-        ZStack {
-            if let text = viewModel.dealerValueText, let point = viewModel.anchors["dealer"] {
-                FloatingTag(text: text, detail: "DEALER")
-                    .position(point)
-            }
-            ForEach(viewModel.hands) { hand in
-                if !hand.cards.isEmpty, let point = viewModel.anchors["hand-\(hand.id)"] {
-                    FloatingTag(text: hand.result?.outcome.title ?? hand.value.display,
-                                detail: "Einsatz \(ChipFormat.string(hand.bet))",
-                                highlighted: hand.isActive || hand.result?.outcome == .win || hand.result?.outcome == .blackjack)
-                        .position(point)
-                        .animation(.easeOut(duration: 0.2), value: point)
-                }
+    @ViewBuilder private var infoRow: some View {
+        InfoItem(title: "Virtuelle Chips", value: ChipFormat.string(model.chips))
+        InfoItem(title: "Einsatz", value: ChipFormat.string(currentStake))
+        if let dealer = viewModel.dealerValueText {
+            InfoItem(title: "Dealer", value: dealer)
+        }
+        ForEach(Array(viewModel.hands.enumerated()), id: \.element.id) { index, hand in
+            if !hand.cards.isEmpty {
+                InfoItem(title: viewModel.hands.count > 1 ? "Hand \(index + 1)" : "Deine Hand",
+                         value: hand.result?.outcome.title ?? hand.value.display,
+                         highlighted: hand.isActive,
+                         valueColor: hand.value.total > 21 ? Theme.redBright : .white)
             }
         }
+        Spacer(minLength: 0)
+        if let summary = viewModel.summary, viewModel.stage == .roundOver {
+            ResultPill(title: summary.title, net: summary.net)
+        }
+    }
+
+    private var currentStake: Int {
+        viewModel.stage == .betting ? viewModel.pendingBet : viewModel.hands.reduce(0) { $0 + $1.bet }
     }
 
     // MARK: - Steuerung
@@ -86,77 +83,64 @@ private struct BlackjackScreen: View {
     @ViewBuilder private var controls: some View {
         switch viewModel.stage {
         case .betting:
-            bettingPanel
+            bettingControls
         case .playerTurn, .busy:
-            actionPanel
+            actionControls
         case .roundOver:
-            HStack(spacing: 16) {
+            HStack(spacing: 14) {
                 Button("NEUE RUNDE") { Task { await viewModel.newRound() } }
-                    .buttonStyle(.casino(.secondary, size: .large))
+                    .buttonStyle(.casino(.secondary, size: .large, fullWidth: true))
                 Button("GLEICHER EINSATZ · \(ChipFormat.string(viewModel.lastBet))") {
                     Task {
                         viewModel.repeatLastBet()
                         await viewModel.deal()
                     }
                 }
-                .buttonStyle(.casino(.primary, size: .large))
+                .buttonStyle(.casino(.primary, size: .large, fullWidth: true))
                 .disabled(model.chips < viewModel.rules.minBet)
             }
-            .padding(18)
-            .glassPanel(cornerRadius: 30)
         }
     }
 
-    private var bettingPanel: some View {
-        HStack(alignment: .center, spacing: 24) {
-            ChipSelector(values: BlackjackViewModel.chipValues,
-                         enabled: { $0 <= model.chips - viewModel.pendingBet },
-                         onTap: { viewModel.addChip($0) })
-
-            Divider().frame(height: 60).overlay(Theme.stroke)
-
-            VStack(alignment: .leading, spacing: 2) {
-                Text("EINSATZ").font(.system(size: 12, weight: .bold)).tracking(2).foregroundStyle(Theme.textSecondary)
-                Text(ChipFormat.string(viewModel.pendingBet))
-                    .font(.numeric(30, weight: .black))
-                    .foregroundStyle(.white)
-                    .contentTransition(.numericText(value: Double(viewModel.pendingBet)))
-                    .animation(.snappy, value: viewModel.pendingBet)
-                Text("Min \(viewModel.rules.minBet) · Max \(ChipFormat.string(viewModel.rules.maxBet))")
-                    .font(.system(size: 11)).foregroundStyle(Theme.textTertiary)
-            }
-            .frame(minWidth: 130, alignment: .leading)
-
-            Spacer(minLength: 0)
-
+    private var bettingControls: some View {
+        let chips = ChipSelector(values: BlackjackViewModel.chipValues,
+                                 enabled: { $0 <= model.chips - viewModel.pendingBet },
+                                 onTap: { viewModel.addChip($0) })
+        let buttons = HStack(spacing: 12) {
             Button { viewModel.clearBet() } label: { Image(systemName: "xmark") }
                 .buttonStyle(.casino(.ghost, size: .large))
                 .disabled(viewModel.pendingBet == 0)
                 .accessibilityLabel("Einsatz löschen")
-
             Button("DEAL") { Task { await viewModel.deal() } }
                 .buttonStyle(.casino(.primary, size: .large))
                 .disabled(viewModel.pendingBet < viewModel.rules.minBet)
         }
-        .padding(18)
-        .glassPanel(cornerRadius: 30)
+        // Breit: eine Zeile · schmal (Hochformat, iPad mini): zwei Zeilen
+        return ViewThatFits(in: .horizontal) {
+            HStack(spacing: 20) { chips; Spacer(minLength: 0); limits; buttons }
+            VStack(spacing: 12) { chips; HStack { limits; Spacer(); buttons } }
+        }
         .overlay(alignment: .top) {
             if model.chips < viewModel.rules.minBet && viewModel.pendingBet == 0 {
-                RescueHint().offset(y: -70)
+                RescueHint().offset(y: -84)
             }
         }
     }
 
-    private var actionPanel: some View {
+    private var limits: some View {
+        Text("Min \(viewModel.rules.minBet) · Max \(ChipFormat.string(viewModel.rules.maxBet))")
+            .font(.system(size: 12)).foregroundStyle(Theme.textTertiary)
+            .fixedSize()
+    }
+
+    private var actionControls: some View {
         let enabled = viewModel.stage == .playerTurn
-        return HStack(spacing: 14) {
+        return HStack(spacing: 12) {
             actionButton("HIT", icon: "plus", action: .hit, kind: .primary, enabled: enabled)
             actionButton("STAND", icon: "hand.raised.fill", action: .stand, kind: .secondary, enabled: enabled)
             actionButton("DOUBLE", icon: "arrow.up.square", action: .double, kind: .gold, enabled: enabled)
             actionButton("SPLIT", icon: "arrow.left.and.right", action: .split, kind: .secondary, enabled: enabled)
         }
-        .padding(18)
-        .glassPanel(cornerRadius: 30)
     }
 
     private func actionButton(_ title: String, icon: String, action: BlackjackAction,
@@ -165,8 +149,8 @@ private struct BlackjackScreen: View {
         return Button {
             Task { await viewModel.perform(action) }
         } label: {
-            VStack(spacing: 4) {
-                Image(systemName: icon).font(.system(size: 20, weight: .bold))
+            HStack(spacing: 8) {
+                Image(systemName: icon).font(.system(size: 17, weight: .bold))
                 Text(title)
             }
         }

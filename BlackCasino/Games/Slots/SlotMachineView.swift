@@ -54,10 +54,11 @@ private struct SlotMachineScreen: View {
             }
 
             if let celebration = viewModel.celebration {
+                // Dezente Gewinnanzeige statt Vollbild-Effekt
                 ZStack {
-                    Color.black.opacity(0.5).ignoresSafeArea()
-                    ParticleField(count: 120, colors: [Theme.gold, Theme.goldLight, Theme.redBright], speed: 3)
-                        .ignoresSafeArea()
+                    Color.black.opacity(0.25).ignoresSafeArea()
+                    ParticleField(count: 18, colors: [Theme.gold, Theme.goldLight], speed: 0.8)
+                        .frame(width: 520, height: 260)
                     WinCelebration(title: celebration.title, amount: celebration.amount)
                 }
                 .transition(.opacity)

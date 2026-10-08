@@ -7,6 +7,8 @@ struct GameTopBar: View {
     let subtitle: String
     /// Optional abweichender Anzeige-Kontostand (z. B. solange Slot-Walzen noch drehen).
     var balance: Int?
+    /// Am Kartentisch steht der Kontostand in der unteren Leiste.
+    var showsBalance = true
     var onLeave: () -> Void = {}
     var onRules: (() -> Void)?
     var onHelp: (() -> Void)?
@@ -24,7 +26,7 @@ struct GameTopBar: View {
                     .foregroundStyle(Theme.textSecondary)
             }
             Spacer()
-            ChipBalanceView(amount: balance ?? model.chips)
+            if showsBalance { ChipBalanceView(amount: balance ?? model.chips) }
             if let onRules {
                 Button {
                     Haptics.tap()
@@ -110,6 +112,73 @@ struct ResultBanner: View {
         .padding(.vertical, 18)
         .glassPanel(cornerRadius: 26)
         .transition(.scale(scale: 0.8).combined(with: .opacity))
+    }
+}
+
+// MARK: - Untere Tischleiste
+
+/// Dezente Leiste am unteren Rand: Spielinformationen links, Aktionen rechts.
+/// Sie liegt unter dem Tisch statt über den Karten.
+struct TableBar<Info: View, Controls: View>: View {
+    @ViewBuilder var info: () -> Info
+    @ViewBuilder var controls: () -> Controls
+
+    var body: some View {
+        VStack(spacing: 12) {
+            HStack(spacing: 22) { info() }
+                .frame(maxWidth: .infinity, alignment: .leading)
+            controls()
+        }
+        .padding(.horizontal, 20)
+        .padding(.top, 14)
+        .padding(.bottom, 16)
+        .background(
+            LinearGradient(colors: [Color.black.opacity(0.55), Color.black.opacity(0.88)], startPoint: .top, endPoint: .bottom)
+                .overlay(alignment: .top) { Rectangle().fill(Color.white.opacity(0.08)).frame(height: 1) }
+                .ignoresSafeArea(edges: .bottom)
+        )
+    }
+}
+
+/// Ein Wert in der Tischleiste, z. B. „Virtuelle Chips: 10.000“.
+struct InfoItem: View {
+    let title: String
+    let value: String
+    var highlighted = false
+    var valueColor: Color = .white
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 1) {
+            Text(title.uppercased())
+                .font(.system(size: 10, weight: .bold)).tracking(1.2)
+                .foregroundStyle(highlighted ? Theme.redBright : Theme.textTertiary)
+            Text(value)
+                .font(.numeric(19, weight: .bold))
+                .foregroundStyle(valueColor)
+                .lineLimit(1)
+                .contentTransition(.numericText())
+        }
+        .fixedSize()
+        .animation(.snappy, value: value)
+    }
+}
+
+/// Kompaktes Rundenergebnis – sachlich statt großer „WIN“-Animation.
+struct ResultPill: View {
+    let title: String
+    let net: Int
+
+    var body: some View {
+        HStack(spacing: 10) {
+            Text(title).font(.system(size: 14, weight: .heavy)).tracking(1)
+            Text(ChipFormat.signed(net)).font(.numeric(15, weight: .bold))
+                .foregroundStyle(net > 0 ? Theme.success : net < 0 ? Theme.redBright : Theme.textSecondary)
+        }
+        .foregroundStyle(.white)
+        .padding(.horizontal, 14).padding(.vertical, 8)
+        .background(Capsule().fill(Color.white.opacity(0.08)))
+        .overlay(Capsule().strokeBorder(net > 0 ? Theme.gold.opacity(0.6) : Color.white.opacity(0.12)))
+        .transition(.opacity.combined(with: .move(edge: .bottom)))
     }
 }
 

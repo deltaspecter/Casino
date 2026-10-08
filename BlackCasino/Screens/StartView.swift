@@ -67,7 +67,7 @@ struct StartView: View {
     private static func makeStage(reducedEffects: Bool) -> CasinoStage {
         let stage = CasinoStage(
             kind: .blackjack,
-            camera: .init(position: SCNVector3(0, 0.62, 1.15), target: SCNVector3(0, 0.12, -0.2), fieldOfView: 40),
+            camera: .init(position: SCNVector3(0, 0.62, 1.15), target: SCNVector3(0, 0.12, -0.2), fieldOfView: 56),
             dealerPosition: SCNVector3(0, -0.02, -0.64),
             reducedEffects: reducedEffects
         )

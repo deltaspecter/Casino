@@ -56,7 +56,7 @@ final class CasinoStage {
         scene.background.contents = UIColor(red: 0.015, green: 0.015, blue: 0.02, alpha: 1)
         // Image-Based Lighting für glaubwürdige Reflexionen auf Chips, Rail und Karten
         scene.lightingEnvironment.contents = TextureFactory.backdrop()
-        scene.lightingEnvironment.intensity = 0.9
+        scene.lightingEnvironment.intensity = 0.7
 
         // Unscharfe Casino-Lichter hinter dem Dealer
         let backdrop = SCNPlane(width: 14, height: 6)
@@ -85,8 +85,8 @@ final class CasinoStage {
     private func buildLights(reducedEffects: Bool) {
         let ambient = SCNLight()
         ambient.type = .ambient
-        ambient.intensity = 90
-        ambient.color = UIColor(red: 1, green: 0.85, blue: 0.8, alpha: 1)
+        ambient.intensity = 110
+        ambient.color = UIColor(red: 1, green: 0.95, blue: 0.88, alpha: 1)
         let ambientNode = SCNNode()
         ambientNode.light = ambient
         scene.rootNode.addChildNode(ambientNode)
@@ -94,8 +94,8 @@ final class CasinoStage {
         // Hauptlicht: warmer Spot über dem Tisch mit weichen Schatten
         let key = SCNLight()
         key.type = .spot
-        key.intensity = 1700
-        key.temperature = 3600
+        key.intensity = 1900
+        key.temperature = 4300
         key.spotInnerAngle = 35
         key.spotOuterAngle = 85
         key.castsShadow = true
@@ -112,12 +112,12 @@ final class CasinoStage {
         keyNode.look(at: SCNVector3(0, 0, -0.1))
         scene.rootNode.addChildNode(keyNode)
 
-        // Rote Akzentlichter (Kante/Atmosphäre)
+        // Warme, gedämpfte Seitenlichter des Saals (keine Neonfarben)
         for x: Float in [-2.2, 2.2] {
             let rim = SCNLight()
             rim.type = .omni
-            rim.intensity = 420
-            rim.color = UIColor(red: 1, green: 0.08, blue: 0.15, alpha: 1)
+            rim.intensity = 160
+            rim.color = UIColor(red: 1, green: 0.72, blue: 0.45, alpha: 1)
             rim.attenuationStartDistance = 0.5
             rim.attenuationEndDistance = 4.5
             let node = SCNNode()
@@ -140,26 +140,33 @@ final class CasinoStage {
 
     private func buildCamera(_ setup: CameraSetup, reducedEffects: Bool) {
         let camera = SCNCamera()
+        // Sichtfeld an der Breite ausrichten: Der Tisch passt auf jedem iPad-Format vollständig ins Bild.
+        camera.projectionDirection = .horizontal
         camera.fieldOfView = setup.fieldOfView
         camera.zNear = 0.05
         camera.zFar = 20
         camera.wantsHDR = true
-        camera.exposureOffset = 0.15
-        camera.bloomIntensity = reducedEffects ? 0 : 0.45
-        camera.bloomThreshold = 0.85
-        camera.bloomBlurRadius = 10
-        camera.vignettingIntensity = 0.55
-        camera.vignettingPower = 0.9
-        camera.saturation = 1.05
-        camera.contrast = 0.08
+        camera.exposureOffset = 0.1
+        camera.bloomIntensity = reducedEffects ? 0 : 0.12
+        camera.bloomThreshold = 1.1
+        camera.bloomBlurRadius = 8
+        camera.vignettingIntensity = 0.45
+        camera.vignettingPower = 0.8
+        camera.saturation = 1.0
+        camera.contrast = 0.05
         if !reducedEffects {
-            camera.screenSpaceAmbientOcclusionIntensity = 0.6
-            camera.screenSpaceAmbientOcclusionRadius = 0.08
+            camera.screenSpaceAmbientOcclusionIntensity = 0.7
+            camera.screenSpaceAmbientOcclusionRadius = 0.06
         }
         cameraNode.camera = camera
         cameraNode.position = setup.position
         cameraNode.look(at: setup.target)
         scene.rootNode.addChildNode(cameraNode)
+    }
+
+    /// Kaum merkliches „Atmen“ der Kamera am Spieltisch (wenige Millimeter, sehr langsam).
+    func startSubtleSway(target: SCNVector3) {
+        startCameraDrift(radius: 0.012, period: 14, target: target)
     }
 
     /// Sehr langsame Kamerabewegung – lässt die Szene lebendig wirken (Startbildschirm).
@@ -194,8 +201,13 @@ enum TableBuilder {
 
     private static func feltNode(kind: TextureFactory.FeltKind, size: CGSize) -> SCNNode {
         let plane = SCNPlane(width: size.width, height: size.height)
-        let m = Materials.textured(TextureFactory.felt(kind), roughness: 0.95)
+        let m = Materials.textured(TextureFactory.felt(kind), roughness: 0.97)
         m.transparencyMode = .aOne
+        // Feine Stoffstruktur, gekachelt über den Filz gelegt
+        m.multiply.contents = TextureFactory.feltWeave()
+        m.multiply.wrapS = .repeat
+        m.multiply.wrapT = .repeat
+        m.multiply.contentsTransform = SCNMatrix4MakeScale(Float(size.width) * 9, Float(size.height) * 9, 1)
         m.isDoubleSided = false
         plane.firstMaterial = m
         let node = SCNNode(geometry: plane)

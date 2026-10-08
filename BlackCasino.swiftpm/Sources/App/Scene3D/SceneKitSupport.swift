@@ -67,8 +67,8 @@ enum Materials {
         return m
     }
 
-    static let gold = pbr(color: Theme.uiGold, roughness: 0.28, metalness: 1)
-    static let leather = pbr(color: UIColor(red: 0.06, green: 0.05, blue: 0.05, alpha: 1), roughness: 0.42)
+    static let gold = pbr(color: UIColor(red: 0.62, green: 0.50, blue: 0.30, alpha: 1), roughness: 0.35, metalness: 1)
+    static let leather = pbr(color: UIColor(red: 0.075, green: 0.05, blue: 0.04, alpha: 1), roughness: 0.38)
     static let skin = pbr(color: UIColor(red: 0.86, green: 0.67, blue: 0.55, alpha: 1), roughness: 0.62)
 }
 

@@ -128,215 +128,193 @@ final class ImportedDealerRig: DealerRig {
 
 // MARK: - Prozeduraler Dealer
 
+/// Stilisierte, hochwertige Dealer-Figur mit realistischen Proportionen (Kopf ≈ 1/7,5 der
+/// Körpergröße). Bewusst ohne gezeichnete Gesichtszüge – wie eine elegante Schneiderpuppe –,
+/// damit sie weder cartoonhaft wirkt noch einer realen Person ähnelt.
 @MainActor
 final class ProceduralDealerRig: DealerRig {
     let root = SCNNode()
-    private let torso = SCNNode()
+    private let chest = SCNNode()
     private let headPivot = SCNNode()
-    private let head = SCNNode()
-    private var eyes: [SCNNode] = []
-    private let mouth = SCNNode()
-    private var brows: [SCNNode] = []
     private let leftShoulder = SCNNode()
     private let rightShoulder = SCNNode()
     private let leftElbow = SCNNode()
     private let rightElbow = SCNNode()
 
     init() {
-        let skin = Materials.skin
-        let shirt = Materials.pbr(color: UIColor(white: 0.93, alpha: 1), roughness: 0.7)
-        let vest = Materials.pbr(color: UIColor(red: 0.07, green: 0.07, blue: 0.08, alpha: 1), roughness: 0.55)
-        let accent = Materials.pbr(color: Theme.uiRed, roughness: 0.4)
-        let hair = Materials.pbr(color: UIColor(red: 0.12, green: 0.08, blue: 0.06, alpha: 1), roughness: 0.75)
+        let skin = Materials.pbr(color: UIColor(red: 0.80, green: 0.64, blue: 0.54, alpha: 1), roughness: 0.58)
+        let shirt = Materials.pbr(color: UIColor(red: 0.93, green: 0.93, blue: 0.91, alpha: 1), roughness: 0.8)
+        let vest = Materials.pbr(color: UIColor(red: 0.06, green: 0.06, blue: 0.07, alpha: 1), roughness: 0.62)
+        let tie = Materials.pbr(color: UIColor(red: 0.42, green: 0.04, blue: 0.08, alpha: 1), roughness: 0.4)
+        let hair = Materials.pbr(color: UIColor(red: 0.10, green: 0.08, blue: 0.07, alpha: 1), roughness: 0.7)
+        let metal = Materials.pbr(color: UIColor(red: 0.62, green: 0.55, blue: 0.42, alpha: 1), roughness: 0.3, metalness: 1)
 
-        // Oberkörper (Hüfte liegt unter Tischhöhe)
-        let torsoGeo = SCNCapsule(capRadius: 0.17, height: 0.62)
-        torsoGeo.materials = [vest]
-        torso.geometry = torsoGeo
-        torso.scale = SCNVector3(1, 1, 0.62)
-        torso.position = SCNVector3(0, 0.08, 0)
-        root.addChildNode(torso)
-
-        // Hemd-Einsatz und Weste mit roten Revers
-        let shirtFront = SCNNode(geometry: SCNBox(width: 0.1, height: 0.26, length: 0.02, chamferRadius: 0.01))
-        shirtFront.geometry?.materials = [shirt]
-        shirtFront.position = SCNVector3(0, 0.22, 0.095)
-        root.addChildNode(shirtFront)
+        // Oberkörper: Brustkorb leicht verjüngt (Hüfte liegt unter der Tischkante)
+        chest.position = SCNVector3(0, 0.12, 0)
+        root.addChildNode(chest)
+        let torso = SCNNode(geometry: SCNBox(width: 0.40, height: 0.50, length: 0.22, chamferRadius: 0.085))
+        torso.geometry?.materials = [shirt]
+        chest.addChildNode(torso)
+        let waist = SCNNode(geometry: SCNBox(width: 0.34, height: 0.22, length: 0.20, chamferRadius: 0.07))
+        waist.geometry?.materials = [vest]
+        waist.position = SCNVector3(0, -0.22, 0)
+        chest.addChildNode(waist)
+        // Weste: zwei Vorderteile mit V-Ausschnitt
         for side: Float in [-1, 1] {
-            let lapel = SCNNode(geometry: SCNBox(width: 0.035, height: 0.24, length: 0.012, chamferRadius: 0.006))
-            lapel.geometry?.materials = [accent]
-            lapel.position = SCNVector3(side * 0.06, 0.21, 0.103)
-            lapel.eulerAngles.z = side * 0.28
-            root.addChildNode(lapel)
+            let panel = SCNNode(geometry: SCNBox(width: 0.17, height: 0.40, length: 0.012, chamferRadius: 0.006))
+            panel.geometry?.materials = [vest]
+            panel.position = SCNVector3(side * 0.105, -0.04, 0.107)
+            panel.eulerAngles.z = side * -0.10
+            chest.addChildNode(panel)
+            let back = SCNNode(geometry: SCNBox(width: 0.19, height: 0.46, length: 0.012, chamferRadius: 0.006))
+            back.geometry?.materials = [vest]
+            back.position = SCNVector3(side * 0.10, 0, -0.106)
+            chest.addChildNode(back)
+            // Westenknöpfe
+            if side < 0 {
+                for i in 0..<3 {
+                    let button = SCNNode(geometry: SCNSphere(radius: 0.006))
+                    button.geometry?.materials = [metal]
+                    button.position = SCNVector3(-0.012, -0.16 + Float(i) * 0.06, 0.116)
+                    chest.addChildNode(button)
+                }
+            }
         }
-        // Fliege
-        for side: Float in [-1, 1] {
-            let wing = SCNNode(geometry: SCNPyramid(width: 0.04, height: 0.035, length: 0.015))
-            wing.geometry?.materials = [accent]
-            wing.position = SCNVector3(side * 0.02, 0.33, 0.11)
-            wing.eulerAngles.z = side * (.pi / 2)
-            root.addChildNode(wing)
-        }
-        let knot = SCNNode(geometry: SCNSphere(radius: 0.011))
-        knot.geometry?.materials = [accent]
-        knot.position = SCNVector3(0, 0.33, 0.115)
-        root.addChildNode(knot)
+        // Krawatte und Kragen
+        let knot = SCNNode(geometry: SCNBox(width: 0.028, height: 0.03, length: 0.02, chamferRadius: 0.008))
+        knot.geometry?.materials = [tie]
+        knot.position = SCNVector3(0, 0.21, 0.112)
+        chest.addChildNode(knot)
+        let tieBlade = SCNNode(geometry: SCNPyramid(width: 0.04, height: 0.16, length: 0.01))
+        tieBlade.geometry?.materials = [tie]
+        tieBlade.eulerAngles.z = .pi
+        tieBlade.position = SCNVector3(0, 0.19, 0.112)
+        chest.addChildNode(tieBlade)
+        let collar = SCNNode(geometry: SCNTube(innerRadius: 0.043, outerRadius: 0.052, height: 0.04))
+        collar.geometry?.materials = [shirt]
+        collar.position = SCNVector3(0, 0.26, 0.004)
+        chest.addChildNode(collar)
 
-        // Hals & Kopf
-        let neck = SCNNode(geometry: SCNCylinder(radius: 0.045, height: 0.08))
+        // Hals und Kopf (gesichtslos, natürlich proportioniert)
+        let neck = SCNNode(geometry: SCNCylinder(radius: 0.042, height: 0.09))
         neck.geometry?.materials = [skin]
-        neck.position = SCNVector3(0, 0.39, 0)
+        neck.position = SCNVector3(0, 0.40, 0)
         root.addChildNode(neck)
-
-        headPivot.position = SCNVector3(0, 0.43, 0)
+        headPivot.position = SCNVector3(0, 0.44, 0)
         root.addChildNode(headPivot)
-        let headGeo = SCNSphere(radius: 0.1)
-        headGeo.segmentCount = 48
-        headGeo.materials = [skin]
-        head.geometry = headGeo
-        head.scale = SCNVector3(0.92, 1.12, 1)
+        let head = SCNNode(geometry: SCNSphere(radius: 0.095))
+        (head.geometry as? SCNSphere)?.segmentCount = 64
+        head.geometry?.materials = [skin]
+        head.scale = SCNVector3(0.82, 1.08, 0.94)
         head.position = SCNVector3(0, 0.1, 0)
         headPivot.addChildNode(head)
-
-        let hairGeo = SCNSphere(radius: 0.104)
-        hairGeo.segmentCount = 48
-        hairGeo.materials = [hair]
-        let hairNode = SCNNode(geometry: hairGeo)
-        hairNode.scale = SCNVector3(0.96, 0.95, 1.0)
-        hairNode.position = SCNVector3(0, 0.135, -0.018)
-        headPivot.addChildNode(hairNode)
-
+        let jaw = SCNNode(geometry: SCNSphere(radius: 0.07))
+        (jaw.geometry as? SCNSphere)?.segmentCount = 48
+        jaw.geometry?.materials = [skin]
+        jaw.scale = SCNVector3(0.92, 0.85, 0.95)
+        jaw.position = SCNVector3(0, 0.05, 0.018)
+        headPivot.addChildNode(jaw)
+        let nose = SCNNode(geometry: SCNPyramid(width: 0.022, height: 0.045, length: 0.02))
+        nose.geometry?.materials = [skin]
+        nose.position = SCNVector3(0, 0.082, 0.086)
+        nose.eulerAngles.x = -0.2
+        headPivot.addChildNode(nose)
         for side: Float in [-1, 1] {
-            let eyeWhite = SCNNode(geometry: SCNSphere(radius: 0.014))
-            eyeWhite.geometry?.materials = [Materials.pbr(color: UIColor(white: 0.97, alpha: 1), roughness: 0.2)]
-            eyeWhite.position = SCNVector3(side * 0.034, 0.115, 0.083)
-            let iris = SCNNode(geometry: SCNSphere(radius: 0.0075))
-            iris.geometry?.materials = [Materials.pbr(color: UIColor(red: 0.2, green: 0.12, blue: 0.07, alpha: 1), roughness: 0.15)]
-            iris.position = SCNVector3(0, 0, 0.0095)
-            eyeWhite.addChildNode(iris)
-            headPivot.addChildNode(eyeWhite)
-            eyes.append(eyeWhite)
-
-            let brow = SCNNode(geometry: SCNBox(width: 0.036, height: 0.006, length: 0.008, chamferRadius: 0.003))
-            brow.geometry?.materials = [hair]
-            brow.position = SCNVector3(side * 0.035, 0.143, 0.089)
-            brow.eulerAngles.z = side * -0.12
-            headPivot.addChildNode(brow)
-            brows.append(brow)
-
-            let ear = SCNNode(geometry: SCNSphere(radius: 0.02))
+            let ear = SCNNode(geometry: SCNSphere(radius: 0.018))
             ear.geometry?.materials = [skin]
-            ear.scale = SCNVector3(0.5, 1, 0.8)
-            ear.position = SCNVector3(side * 0.093, 0.1, 0)
+            ear.scale = SCNVector3(0.45, 1.1, 0.8)
+            ear.position = SCNVector3(side * 0.079, 0.1, -0.005)
             headPivot.addChildNode(ear)
         }
+        // Kurzer, gepflegter Haarschnitt
+        let hairCap = SCNNode(geometry: SCNSphere(radius: 0.098))
+        (hairCap.geometry as? SCNSphere)?.segmentCount = 64
+        hairCap.geometry?.materials = [hair]
+        hairCap.scale = SCNVector3(0.84, 0.86, 0.96)
+        hairCap.position = SCNVector3(0, 0.135, -0.012)
+        headPivot.addChildNode(hairCap)
 
-        let nose = SCNNode(geometry: SCNCapsule(capRadius: 0.011, height: 0.04))
-        nose.geometry?.materials = [skin]
-        nose.position = SCNVector3(0, 0.095, 0.1)
-        nose.eulerAngles.x = 0.25
-        headPivot.addChildNode(nose)
-
-        let lips = SCNCapsule(capRadius: 0.005, height: 0.04)
-        lips.materials = [Materials.pbr(color: UIColor(red: 0.62, green: 0.32, blue: 0.3, alpha: 1), roughness: 0.4)]
-        mouth.geometry = lips
-        mouth.eulerAngles.z = .pi / 2
-        mouth.position = SCNVector3(0, 0.055, 0.092)
-        headPivot.addChildNode(mouth)
-
-        // Arme: Schulter → Oberarm → Ellbogen → Unterarm → Hand
+        // Arme: Schulter → Oberarm → Ellbogen → Unterarm → Hand (Hemdsärmel, Ärmelhalter)
         for (shoulder, elbow, side) in [(leftShoulder, leftElbow, Float(-1)), (rightShoulder, rightElbow, Float(1))] {
-            shoulder.position = SCNVector3(side * 0.2, 0.3, 0)
+            shoulder.position = SCNVector3(side * 0.20, 0.33, 0)
             root.addChildNode(shoulder)
-            let ball = SCNNode(geometry: SCNSphere(radius: 0.065))
-            ball.geometry?.materials = [shirt]
-            shoulder.addChildNode(ball)
-            let upper = SCNNode(geometry: SCNCapsule(capRadius: 0.045, height: 0.26))
+            let cap = SCNNode(geometry: SCNSphere(radius: 0.055))
+            cap.geometry?.materials = [shirt]
+            shoulder.addChildNode(cap)
+            let upper = SCNNode(geometry: SCNCapsule(capRadius: 0.042, height: 0.28))
             upper.geometry?.materials = [shirt]
-            upper.position = SCNVector3(0, -0.12, 0)
+            upper.position = SCNVector3(0, -0.13, 0)
             shoulder.addChildNode(upper)
-            elbow.position = SCNVector3(0, -0.24, 0)
+            let garter = SCNNode(geometry: SCNTorus(ringRadius: 0.043, pipeRadius: 0.005))
+            garter.geometry?.materials = [vest]
+            garter.position = SCNVector3(0, -0.10, 0)
+            shoulder.addChildNode(garter)
+            elbow.position = SCNVector3(0, -0.26, 0)
             shoulder.addChildNode(elbow)
-            let fore = SCNNode(geometry: SCNCapsule(capRadius: 0.04, height: 0.24))
+            let fore = SCNNode(geometry: SCNCapsule(capRadius: 0.036, height: 0.25))
             fore.geometry?.materials = [shirt]
-            fore.position = SCNVector3(0, -0.11, 0)
+            fore.position = SCNVector3(0, -0.115, 0)
             elbow.addChildNode(fore)
-            let cuff = SCNNode(geometry: SCNCylinder(radius: 0.042, height: 0.02))
-            cuff.geometry?.materials = [Materials.gold]
-            cuff.position = SCNVector3(0, -0.215, 0)
+            let cuff = SCNNode(geometry: SCNCylinder(radius: 0.037, height: 0.025))
+            cuff.geometry?.materials = [shirt]
+            cuff.position = SCNVector3(0, -0.225, 0)
             elbow.addChildNode(cuff)
-            let hand = SCNNode(geometry: SCNSphere(radius: 0.038))
+            let link = SCNNode(geometry: SCNSphere(radius: 0.006))
+            link.geometry?.materials = [metal]
+            link.position = SCNVector3(side * -0.035, -0.225, 0.01)
+            elbow.addChildNode(link)
+            let hand = SCNNode(geometry: SCNBox(width: 0.075, height: 0.09, length: 0.028, chamferRadius: 0.013))
             hand.geometry?.materials = [skin]
-            hand.scale = SCNVector3(0.9, 1.1, 0.6)
-            hand.position = SCNVector3(0, -0.255, 0)
+            hand.position = SCNVector3(0, -0.285, 0)
             elbow.addChildNode(hand)
-            // Ruhehaltung: Unterarme nach vorn auf den Tisch gerichtet
-            shoulder.eulerAngles = SCNVector3(-0.35, 0, side * 0.12)
-            elbow.eulerAngles = SCNVector3(-1.15, 0, 0)
+            let thumb = SCNNode(geometry: SCNCapsule(capRadius: 0.011, height: 0.05))
+            thumb.geometry?.materials = [skin]
+            thumb.position = SCNVector3(side * -0.04, -0.27, 0.008)
+            thumb.eulerAngles.z = side * 0.5
+            elbow.addChildNode(thumb)
+            // Ruhehaltung: Unterarme ruhen vorn über dem Tisch
+            shoulder.eulerAngles = SCNVector3(-0.32, 0, side * 0.10)
+            elbow.eulerAngles = SCNVector3(-1.2, 0, 0)
         }
     }
 
     func startIdle() {
-        // Atmen
-        let inhale = SCNAction.scale(to: 1.012, duration: 2.1)
+        // Ruhige Atmung (Brustkorb) – kaum sichtbar
+        let inhale = SCNAction.scale(to: 1.008, duration: 2.4)
         inhale.timingMode = .easeInEaseOut
-        let exhale = SCNAction.scale(to: 1.0, duration: 2.3)
+        let exhale = SCNAction.scale(to: 1.0, duration: 2.6)
         exhale.timingMode = .easeInEaseOut
-        root.play(.repeatForever(.sequence([inhale, exhale])), key: "breath")
-
-        // Leichtes Kopfwiegen
-        let swayA = SCNAction.rotateTo(x: 0.03, y: 0.06, z: 0.01, duration: 3.4, usesShortestUnitArc: true)
-        swayA.timingMode = .easeInEaseOut
-        let swayB = SCNAction.rotateTo(x: -0.01, y: -0.05, z: -0.01, duration: 3.8, usesShortestUnitArc: true)
-        swayB.timingMode = .easeInEaseOut
-        headPivot.play(.repeatForever(.sequence([swayA, swayB])), key: "sway")
-
-        scheduleBlink()
-    }
-
-    private func scheduleBlink() {
-        let wait = Double.random(in: 2.2...5.8) // nur Optik
-        let close = SCNAction.customAction(duration: 0.07) { node, t in
-            node.scale.y = Float(1 - 0.9 * (t / 0.07))
-        }
-        let open = SCNAction.customAction(duration: 0.1) { node, t in
-            node.scale.y = Float(0.1 + 0.9 * (t / 0.1))
-        }
-        for eye in eyes { eye.play(.sequence([.wait(duration: wait), close, open])) }
-        Task { @MainActor [weak self] in
-            try? await Task.sleep(for: .seconds(wait + 0.2))
-            guard let self, self.root.parent != nil else { return }
-            self.scheduleBlink()
-        }
+        chest.play(.repeatForever(.sequence([inhale, exhale])), key: "breath")
+        resumeSway()
     }
 
     func reach(toward local: SCNVector3, rightHand: Bool) {
         let shoulder = rightHand ? rightShoulder : leftShoulder
         let elbow = rightHand ? rightElbow : leftElbow
         let side: Float = rightHand ? 1 : -1
-        let yaw = max(-0.6, min(0.6, atan2(local.x - side * 0.2, max(0.2, local.z))))
-        let out = SCNAction.rotateTo(x: -1.05, y: CGFloat(yaw), z: CGFloat(side * 0.12), duration: 0.18, usesShortestUnitArc: true)
+        let yaw = max(-0.55, min(0.55, atan2(local.x - side * 0.2, max(0.2, local.z))))
+        let out = SCNAction.rotateTo(x: -0.95, y: CGFloat(yaw), z: CGFloat(side * 0.10), duration: 0.2, usesShortestUnitArc: true)
         out.timingMode = .easeOut
-        let back = SCNAction.rotateTo(x: -0.35, y: 0, z: CGFloat(side * 0.12), duration: 0.3, usesShortestUnitArc: true)
+        let back = SCNAction.rotateTo(x: -0.32, y: 0, z: CGFloat(side * 0.10), duration: 0.34, usesShortestUnitArc: true)
         back.timingMode = .easeInEaseOut
         shoulder.play(.sequence([out, back]), key: "reach")
-        let extend = SCNAction.rotateTo(x: -0.55, y: 0, z: 0, duration: 0.18, usesShortestUnitArc: true)
-        let bend = SCNAction.rotateTo(x: -1.15, y: 0, z: 0, duration: 0.3, usesShortestUnitArc: true)
+        let extend = SCNAction.rotateTo(x: -0.6, y: 0, z: 0, duration: 0.2, usesShortestUnitArc: true)
+        extend.timingMode = .easeOut
+        let bend = SCNAction.rotateTo(x: -1.2, y: 0, z: 0, duration: 0.34, usesShortestUnitArc: true)
+        bend.timingMode = .easeInEaseOut
         elbow.play(.sequence([extend, bend]), key: "reach")
     }
 
     func look(at local: SCNVector3) {
-        let yaw = max(-0.5, min(0.5, atan2(local.x, max(0.1, local.z)) * 0.6))
-        let pitch = Float(0.18)
+        let yaw = max(-0.4, min(0.4, atan2(local.x, max(0.1, local.z)) * 0.5))
         headPivot.removeAction(forKey: "sway")
-        let turn = SCNAction.rotateTo(x: CGFloat(pitch), y: CGFloat(yaw), z: 0, duration: 0.25, usesShortestUnitArc: true)
+        let turn = SCNAction.rotateTo(x: 0.16, y: CGFloat(yaw), z: 0, duration: 0.35, usesShortestUnitArc: true)
         turn.timingMode = .easeInEaseOut
-        let hold = SCNAction.wait(duration: 0.9)
-        let reset = SCNAction.rotateTo(x: 0.05, y: 0, z: 0, duration: 0.6, usesShortestUnitArc: true)
+        let reset = SCNAction.rotateTo(x: 0.06, y: 0, z: 0, duration: 0.7, usesShortestUnitArc: true)
         reset.timingMode = .easeInEaseOut
-        headPivot.play(.sequence([turn, hold, reset]), key: "look")
+        headPivot.play(.sequence([turn, .wait(duration: 0.8), reset]), key: "look")
         Task { @MainActor [weak self] in
-            try? await Task.sleep(for: .seconds(1.8))
+            try? await Task.sleep(for: .seconds(2.0))
             guard let self, self.headPivot.action(forKey: "look") == nil else { return }
             self.resumeSway()
         }
@@ -344,26 +322,20 @@ final class ProceduralDealerRig: DealerRig {
 
     private func resumeSway() {
         guard headPivot.action(forKey: "sway") == nil else { return }
-        let swayA = SCNAction.rotateTo(x: 0.03, y: 0.06, z: 0.01, duration: 3.4, usesShortestUnitArc: true)
-        swayA.timingMode = .easeInEaseOut
-        let swayB = SCNAction.rotateTo(x: -0.01, y: -0.05, z: -0.01, duration: 3.8, usesShortestUnitArc: true)
-        swayB.timingMode = .easeInEaseOut
-        headPivot.play(.repeatForever(.sequence([swayA, swayB])), key: "sway")
+        let a = SCNAction.rotateTo(x: 0.07, y: 0.035, z: 0.006, duration: 4.2, usesShortestUnitArc: true)
+        a.timingMode = .easeInEaseOut
+        let b = SCNAction.rotateTo(x: 0.05, y: -0.03, z: -0.006, duration: 4.6, usesShortestUnitArc: true)
+        b.timingMode = .easeInEaseOut
+        headPivot.play(.repeatForever(.sequence([a, b])), key: "sway")
     }
 
     func react(_ reaction: DealerAvatar.Reaction) {
-        // Lächeln: Mund breiter, Augenbrauen leicht angehoben; Nicken bei Spielergewinn
-        let widen = SCNAction.scale(to: reaction == .playerWon ? 1.35 : 1.15, duration: 0.2)
-        let relax = SCNAction.scale(to: 1, duration: 0.5)
-        mouth.play(.sequence([widen, .wait(duration: 1.2), relax]))
-        for brow in brows {
-            brow.play(.sequence([.moveBy(x: 0, y: 0.004, z: 0, duration: 0.2), .wait(duration: 1.0),
-                                      .moveBy(x: 0, y: -0.004, z: 0, duration: 0.4)]))
-        }
-        if reaction == .playerWon {
-            let nodDown = SCNAction.rotateBy(x: 0.14, y: 0, z: 0, duration: 0.18)
-            let nodUp = SCNAction.rotateBy(x: -0.14, y: 0, z: 0, duration: 0.22)
-            head.play(.sequence([nodDown, nodUp, nodDown, nodUp]))
-        }
+        // Dezentes, professionelles Nicken – keine übertriebenen Gesten
+        guard reaction == .playerWon else { return }
+        let down = SCNAction.rotateBy(x: 0.09, y: 0, z: 0, duration: 0.22)
+        down.timingMode = .easeInEaseOut
+        let up = SCNAction.rotateBy(x: -0.09, y: 0, z: 0, duration: 0.3)
+        up.timingMode = .easeInEaseOut
+        headPivot.play(.sequence([down, up]), key: "nod")
     }
 }

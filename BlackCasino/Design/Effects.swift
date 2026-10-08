@@ -70,22 +70,25 @@ struct WinCelebration: View {
     let title: String
     let amount: Int
     @State private var shown = 0
-    @State private var scale: CGFloat = 0.6
+    @State private var scale: CGFloat = 0.92
 
     var body: some View {
         VStack(spacing: 10) {
             Text(title)
-                .font(.display(64))
+                .font(.display(30))
+                .tracking(4)
                 .foregroundStyle(Theme.goldGradient)
-                .shadow(color: Theme.gold.opacity(0.6), radius: 24)
             Text("+\(ChipFormat.string(shown))")
-                .font(.numeric(44, weight: .black))
+                .font(.numeric(34, weight: .heavy))
                 .foregroundStyle(.white)
                 .contentTransition(.numericText(value: Double(shown)))
         }
+        .padding(.horizontal, 40)
+        .padding(.vertical, 24)
+        .glassPanel(cornerRadius: 26)
         .scaleEffect(scale)
         .onAppear {
-            withAnimation(.spring(response: 0.5, dampingFraction: 0.55)) { scale = 1 }
+            withAnimation(.spring(response: 0.45, dampingFraction: 0.85)) { scale = 1 }
             Task { @MainActor in
                 let steps = 30
                 for i in 1...steps {
